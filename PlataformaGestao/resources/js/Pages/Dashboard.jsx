@@ -8,50 +8,55 @@ import {
 export default function Dashboard({ auth }) {
     
     const customerStats = [
-        { 
-            label: 'Pronto p/ levantar', 
-            value: '24', 
-            icon: <FaCheckCircle />,
-            href: route('orders.index'), 
-            color: 'bg-green-50 text-green-700 border-green-200',
-            btnColor: 'bg-green-600 hover:bg-green-700'
-        },
-        { 
-            label: 'Faltam Livros', 
-            value: '8', 
-            icon: <FaExclamationTriangle />,
-            href: '#', 
-            color: 'bg-red-50 text-red-700 border-red-200',
-            btnColor: 'bg-red-600 hover:bg-red-700'
-        },
-        { 
-            label: 'Aguarda Encapamento', 
-            value: '12', 
-            icon: <FaBoxOpen />,
-            href: '#', 
-            color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-            btnColor: 'bg-yellow-600 hover:bg-yellow-700'
-        },
-    ];
+    { 
+        label: 'Pronto p/ levantar', 
+        value: '24', 
+        icon: <FaCheckCircle />,
+        href: route('orders.index'), 
+        // Removido o 'bg-green-50'
+        color: 'text-green-700 border-green-200', 
+        btnColor: 'bg-green-600 hover:bg-green-700'
+    },
+    { 
+        label: 'Faltam Livros', 
+        value: '8', 
+        icon: <FaExclamationTriangle />,
+        href: '#', 
+        // Removido o 'bg-red-50'
+        color: 'text-red-700 border-red-200', 
+        btnColor: 'bg-red-600 hover:bg-red-700'
+    },
+    { 
+        label: 'Aguarda Encapamento', 
+        value: '12', 
+        icon: <FaBoxOpen />,
+        href: '#', 
+        // Removido o 'bg-yellow-50'
+        color: 'text-yellow-700 border-yellow-200', 
+        btnColor: 'bg-yellow-600 hover:bg-yellow-700'
+    },
+];
 
-    const publisherStats = [
-        { 
-            label: 'Para encomendar', 
-            value: '24', 
-            icon: <FaClipboardList />,
-            href: '#', 
-            color: 'bg-orange-50 text-orange-700 border-orange-200',
-            btnColor: 'bg-orange-600 hover:bg-orange-700'
-        },
-        { 
-            label: 'Já Encomendadas', 
-            value: '8', 
-            icon: <FaTruck />,
-            href: '#', 
-            color: 'bg-blue-50 text-blue-700 border-blue-200',
-            btnColor: 'bg-blue-600 hover:bg-blue-700'
-        },
-    ];
+const publisherStats = [
+    { 
+        label: 'Para encomendar', 
+        value: '24', 
+        icon: <FaClipboardList />,
+        href: '#', 
+        // Removido o 'bg-orange-50'
+        color: 'text-orange-700 border-orange-200', 
+        btnColor: 'bg-orange-600 hover:bg-orange-700'
+    },
+    { 
+        label: 'Já Encomendadas', 
+        value: '8', 
+        icon: <FaTruck />,
+        href: '#', 
+        // Removido o 'bg-blue-50'
+        color: 'text-blue-700 border-blue-200', 
+        btnColor: 'bg-blue-600 hover:bg-blue-700'
+    },
+];
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -140,20 +145,30 @@ function SectionHeader({ title, icon }) {
 
 function StatCard({ stat }) {
     return (
-        <div className={`p-5 rounded-xl border ${stat.color} transition-all duration-200 hover:shadow-md flex flex-col justify-between h-36 relative overflow-hidden`}>
-            {/* Ícone de fundo decorativo */}
-            <div className="absolute -right-4 -top-4 opacity-10 text-6xl">
+        /* Fundo branco e borda neutra */
+        <div className="p-5 rounded-xl border border-gray-100 bg-white transition-all duration-200 hover:shadow-md flex flex-col justify-between h-36 relative overflow-hidden">
+            
+            {/* 1. Ícone decorativo de fundo (apenas cor de texto) */}
+            <div className={`absolute -right-4 -top-4 opacity-10 text-6xl ${stat.color}`}>
                 {stat.icon}
             </div>
 
             <div>
-                <div className="flex items-center gap-2 mb-1 opacity-90">
+                {/* 2. Cor aplicada APENAS aqui (ícone pequeno e texto do label) */}
+                <div className={`flex items-center gap-2 mb-1 ${stat.color}`}>
                     {stat.icon}
-                    <span className="text-xs font-bold uppercase tracking-wide">{stat.label}</span>
+                    <span className="text-xs font-bold uppercase tracking-wide">
+                        {stat.label}
+                    </span>
                 </div>
-                <span className="text-4xl font-black tracking-tight">{stat.value}</span>
+                
+                {/* 3. Valor em cor neutra (ex: quase preto) */}
+                <span className="text-4xl font-black tracking-tight text-gray-800">
+                    {stat.value}
+                </span>
             </div>
 
+            {/* 4. Botão mantém a sua cor de destaque */}
             <Link 
                 href={stat.href} 
                 className={`mt-2 py-1.5 px-3 rounded-lg text-xs font-bold text-white text-center flex items-center justify-center gap-2 transition-colors ${stat.btnColor}`}
