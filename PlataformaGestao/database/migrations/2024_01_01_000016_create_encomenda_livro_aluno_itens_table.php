@@ -25,8 +25,8 @@ return new class extends Migration
             $table->tinyInteger('quantidade_entregue');
             $table->boolean('entregue')->default(false);
             $table->boolean('ensacado')->default(false);
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('encomenda_aluno_id')

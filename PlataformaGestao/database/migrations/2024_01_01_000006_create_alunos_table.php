@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('telefone')->nullable();
             $table->string('email')->nullable();
             $table->string('numero_cliente')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();;
+            $table->timestamp('updated_at')->nullable();;
             $table->softDeletes();
 
             $table->unique('nif', 'alunos_index_0');

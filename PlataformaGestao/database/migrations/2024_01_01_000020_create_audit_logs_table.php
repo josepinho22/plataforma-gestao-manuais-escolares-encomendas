@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('entity_id');
             $table->string('action');
             $table->json('changes')->nullable();
-            $table->timestamp('created_at');
+            $table->timestamp('created_at')->nullable();
 
             $table->foreign('user_id')
                 ->references('id')

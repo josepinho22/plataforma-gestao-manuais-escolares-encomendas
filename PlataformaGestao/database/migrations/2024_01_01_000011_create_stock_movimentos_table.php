@@ -17,8 +17,8 @@ return new class extends Migration
             $table->tinyInteger('tipo');
             $table->integer('quantidade');
             $table->string('observacao')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('livro_id')

@@ -21,8 +21,8 @@ return new class extends Migration
             $table->unsignedBigInteger('editora_id')->nullable();
             $table->enum('status', ['SOLICITADO', 'ENTREGA_PARCIAL', 'ENTREGA_COMPLETA']);
             $table->dateTime('data_solicitada')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('editora_id')

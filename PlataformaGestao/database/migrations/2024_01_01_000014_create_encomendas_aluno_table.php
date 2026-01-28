@@ -31,8 +31,8 @@ return new class extends Migration
             $table->unsignedBigInteger('lista_id')->nullable();
             $table->enum('status', ['AGUARDA_LIVROS', 'AGUARDA_ENSACAMENTO','AGUARDA_ENCAPAMENTO', 'AGUARDA_LEVANTAMENTO', 'ENTREGUE']);
             $table->string('observacao')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('aluno_id')
