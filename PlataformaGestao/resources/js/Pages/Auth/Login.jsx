@@ -35,7 +35,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="flex justify-center mb-6">
                     {/* Certifica-te que a imagem está em public/images/logo_papelix.png */}
                     <img 
-                        src="/images/papelix.png" 
+                        src="images/Papelock_logo.png" 
                         alt="Papelix Logo" 
                         className="h-50 w-auto mx-auto" 
                     />

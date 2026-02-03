@@ -71,7 +71,7 @@ export default function Dashboard({ auth }) {
     );
 }
 
-// --- SUB-COMPONENTES (As tuas peças de LEGO) ---
+// --- SUB-COMPONENTES ---
 
 function QuickAction({ icon, label, variant = 'light' }) {
     const isDark = variant === 'dark';
