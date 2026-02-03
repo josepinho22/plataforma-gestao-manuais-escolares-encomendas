@@ -10,7 +10,7 @@ export default function Sidebar({ user }) {
         { label: 'Nova Encomenda', href: '#', active: false, icon: <FaPlus /> },
         { label: 'Encomendas', href: route('orders.index'), active: route().current('orders.*'), icon: <FaBox /> },
         { label: 'Catálogo de Livros', href: '#', active: false, icon: <FaBook /> },
-        { label: 'Listas de Livros', href: '#', active: false, icon: <FaListUl /> },
+        { label: 'Listas de Livros', href: route('books.index'), active: route().current('books.index'), icon: <FaListUl /> },
         { label: 'Encomendas à Editora', href: '#', active: false, icon: <FaTruck /> },
     ];
 
