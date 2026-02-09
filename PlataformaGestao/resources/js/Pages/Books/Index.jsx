@@ -1,132 +1,168 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { FaSearch, FaPlus, FaBook, FaTrash, FaEdit } from "react-icons/fa";
+import { Head, useForm } from '@inertiajs/react';
+import { useState, useMemo, useEffect } from 'react';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { FaSearch } from "react-icons/fa";
+import axios from 'axios';
 
-export default function BooksLists({ auth, lists = [], concelhos = [], anos_letivos = [], anos_escolares = [] }) {
-    const { data, setData, get, processing } = useForm({
-        concelho: FilterSelect.concelho,
-        ano_letivo_id: FilterSelect.ano_escolar_id,
-        ano_escolar_id: FilterSelect.ano_escolar_id,
+import BookCard from '@/Components/BookCard';
+import FilterSection from '@/Components/FilterSection';
+
+export default function BooksLists({ auth, catalog = [], concelhos = [], escolas = [], anos_letivos = [], anos_escolares = [] }) {
+    const [currentList, setCurrentList] = useState([]); 
+    const [searchTerm, setSearchTerm] = useState(""); 
+
+    const { data, setData, post, processing } = useForm({
+        concelho: '',
+        escola_id: '',
+        ano_letivo_id: '',
+        ano_escolar_id: '',
+        items: [],
     });
 
-    const handleSearch = (e) => {
-        // evita atualizar a pagina inteira ao enviar um form
-        e.preventDefault();
-        get(route('book-lists.index'));
-    };
+    useEffect(() => {
+    if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
+        setCurrentList([]); 
+        
+        axios.get(route('api.lista.books'), { 
+            params: { 
+                escola_id: data.escola_id,
+                ano_letivo_id: data.ano_letivo_id,
+                ano_escolar_id: data.ano_escolar_id 
+            } 
+        })
+        .then(res => {
+            const novaLista = Array.isArray(res.data) ? res.data : [];
+            setCurrentList(novaLista);
+        })
+        .catch(err => {
+            console.error("Erro:", err);
+            setCurrentList([]);
+        });
+    } else {
+        setCurrentList([]);
+    }
+}, [data.escola_id, data.ano_letivo_id, data.ano_escolar_id]);
+
+    const availableEscolas = useMemo(() => {
+        if (!data.concelho) return [];
+        return escolas.filter(escola => String(escola.concelho_id) === String(data.concelho));
+    }, [data.concelho, escolas]);
+
+    const filteredCatalog = catalog.filter(book => 
+        book.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const onDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    if (source.droppableId === 'catalog' && destination.droppableId === 'currentList') {
+        const item = filteredCatalog[source.index];
+        if (!currentList.find(i => i.id === item.id)) {
+            setCurrentList(prev => [...prev, item]);
+        }
+    }
+};
+
+    const handleSave = () => {
+    post(route('book-lists.store'), {
+        data: {
+            ...data,
+            items: currentList.map(item => item.id) 
+        },
+        preserveScroll: true,
+        onSuccess: () => {
+            alert('Lista Salva com Sucesso!');
+        },
+    });
+};
 
     return (
         <AuthenticatedLayout user={auth.user}>
-            <Head title="Listas de Livros" />
+            <Head title="Gerir Listas" />
+            <div className="space-y-6 max-w-7xl mx-auto pb-10 px-4">
+                
+                <FilterSection 
+                    data={data}
+                    setData={setData}
+                    concelhos={concelhos}
+                    availableEscolas={availableEscolas}
+                    anos_letivos={anos_letivos}
+                    anos_escolares={anos_escolares}
+                    handleSave={handleSave}
+                    processing={processing}
+                />
 
-            <div className="space-y-6">
-                {/* CABEÇALHO */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Listas de Livros Escolares</h1>
-                        <p className="text-gray-500 text-sm">Gerir listas de livros por concelho, ano letivo e ano escolar</p>
-                    </div>
-                    <Link 
-                        href={route('books.index')}
-                        className="flex items-center bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition shadow-sm"
-                    >
-                        <FaPlus className="mr-2" />
-                        Nova Lista
-                    </Link>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                        <FilterSelect 
-                            label="Concelho" 
-                            value={data.concelho}
-                            onChange={e => setData('concelho', e.target.value)}
-                            options={concelhos}
-                        />
-                        <FilterSelect 
-                            label="Ano Letivo" 
-                            value={data.ano_letivo_id}
-                            onChange={e => setData('ano_letivo', e.target.value)}
-                            options={anos_letivos} 
-                        />
-                        <FilterSelect 
-                            label="Ano Escolar" 
-                            value={data.ano_escolar_id}
-                            onChange={e => setData('ano_escolar', e.target.value)}
-                            options={anos_escolares} 
-                        />
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* LISTA ATUAL */}
+<div className="space-y-4">
+    <h3 className="font-bold text-gray-700">Lista Atual ({currentList.length})</h3>
+    <Droppable droppableId="currentList">
+        {(provided, snapshot) => (
+            <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef} 
+                className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors 
+                    ${snapshot.isDraggingOver ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200'}`}
+            >
+               
+                {currentList && currentList.length > 0 ? (
+                    currentList.map((item, index) => {
+                       
+                        if (!item || !item.id) return null;
                         
-                        <button 
-                            type="submit"
-                            disabled={processing}
-                            className="w-full bg-black text-white h-[42px] rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition"
-                        >
-                            <FaSearch className="text-xs" />
-                            Buscar Lista
-                        </button>
-                    </form>
-                </div>
+                        return (
+                            <BookCard 
+                                key={`list-item-${item.id}-${index}`}
+                                item={item} 
+                                index={index} 
+                                isRemovable 
+                                onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))} 
+                            />
+                        );
+                    })
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                        <p className="text-sm italic">Arraste livros do catálogo para aqui</p>
+                    </div>
+                )}
+                {provided.placeholder}
+            </div>
+        )}
+    </Droppable>
+</div>
 
-                {/* 3. TABELA DE RESULTADOS */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500 tracking-wider">Escola / Agrupamento</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500 tracking-wider">Ano</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500 tracking-wider text-center">Livros</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase text-gray-500 tracking-wider text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {lists.length > 0 ? lists.map((item) => (
-                                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{item.school_name}</td>
-                                    <td className="px-6 py-4 text-gray-600">{item.year}</td>
-                                    <td className="px-6 py-4 text-center">
-                                        <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-xs font-bold">
-                                            {item.books_count} Livros
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        <button className="p-2 text-gray-400 hover:text-blue-600 transition"><FaEdit /></button>
-                                        <button className="p-2 text-gray-400 hover:text-red-600 transition"><FaTrash /></button>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-gray-400">
-                                        <FaBook className="mx-auto mb-3 text-3xl opacity-20" />
-                                        Nenhuma lista encontrada para os filtros selecionados.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                        {/* CATÁLOGO */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-gray-700">Catálogo de Livros</h3>
+                                <div className="relative w-64">
+                                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Pesquisar..." 
+                                        value={searchTerm} 
+                                        onChange={e => setSearchTerm(e.target.value)} 
+                                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black" 
+                                    />
+                                </div>
+                            </div>
+                            <Droppable droppableId="catalog">
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2">
+                                        {filteredCatalog.map((item, index) => (
+                                            <BookCard key={`cat-${item.id}`} item={item} index={index} />
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </div>
+                    </div>
+                </DragDropContext>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-// --- SUB-COMPONENTES AUXILIARES ---
-
-function FilterSelect({ label, value, onChange, options }) {
-    return (
-        <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-700 uppercase ml-1">{label}</label>
-            <select 
-                value={value}
-                onChange={onChange}
-                className="bg-gray-50 border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-all"
-            >
-                <option value="">Selecione</option>
-                {options.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                        {opt.nome}
-                    </option>
-                ))}
-            </select>
-        </div>
     );
 }
