@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StockController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,6 +22,9 @@ Route::get('/dashboard', function () {
 
 // Rotas para encomendas
 Route::get('/encomendas', [OrderController::class, 'index'])->name('orders.index');
+
+// Rotas para stock
+Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 
 
 Route::middleware('auth')->group(function () {

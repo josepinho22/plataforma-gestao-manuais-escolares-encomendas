@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Http\Controllers;
+use App\Models\Livro;
+use App\Models\Disciplina;
+use App\Models\Editora;
+use App\Models\AnoEscolar;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+
+class StockController extends Controller
+{
+    public function index(Request $request)
+    {
+
+        // Build necessario as a grouped subquery (not correlated)
+        // Aggregates remaining quantity per livro_id for non-ensacado items
+        $necessarioQuery = DB::table('encomenda_livro_aluno_itens as elai')
+            ->select([
+                'elai.livro_id',
+                DB::raw('COALESCE(SUM(
+                    CASE WHEN (elai.quantidade - elai.quantidade_entregue) > 0
+                         THEN (elai.quantidade - elai.quantidade_entregue)
+                         ELSE 0 END
+                ), 0) as necessario')
+            ])
+            ->join('encomendas_aluno as ea', 'ea.id', '=', 'elai.encomenda_aluno_id')
+            ->where('elai.ensacado', 0)
+            ->where('ea.status', '!=', 'ENTREGUE')
+            ->whereNull('elai.deleted_at')
+            ->whereNull('ea.deleted_at')
+            ->groupBy('elai.livro_id');
+
+        $query = Livro::query()
+            ->select([
+                'livros.id as livro_id',
+                'livros.titulo',
+                'livros.isbn',
+                'livros.ano_escolar_id',
+                'disciplinas.nome as disciplina_nome',
+                'editoras.nome as editora_nome',
+                'editoras.codigo as editora_codigo',
+                DB::raw('COALESCE(stocks.quantidade, 0) as stock_qtd'),
+                DB::raw('COALESCE(necessario_sub.necessario, 0) as necessario'),
+            ])
+            ->leftJoin('stocks', function ($join) {
+                $join->on('stocks.livro_id', '=', 'livros.id')
+                     ->whereNull('stocks.deleted_at');
+            })
+            ->leftJoinSub($necessarioQuery, 'necessario_sub', function ($join) {
+                $join->on('livros.id', '=', 'necessario_sub.livro_id');
+            })
+            ->leftJoin('disciplinas', 'disciplinas.id', '=', 'livros.disciplina_id')
+            ->leftJoin('editoras', 'editoras.id', '=', 'livros.editora_id')
+            ->where(function ($q) {
+            $q->where('stocks.quantidade', '>', 0)
+            ->orWhere('necessario_sub.necessario', '>', 0);
+        });
+
+        // Filters
+        if ($request->filled('titulo')) {
+            $query->where('livros.titulo', 'like', '%' . $request->titulo . '%');
+        }
+
+        if ($request->filled('isbn')) {
+            $query->where('livros.isbn', 'like', '%' . $request->isbn . '%');
+        }
+
+        if ($request->filled('disciplina_id')) {
+            $query->where('livros.disciplina_id', $request->disciplina_id);
+        }
+
+        if ($request->filled('editora_id')) {
+            $query->where('livros.editora_id', $request->editora_id);
+        }
+
+        if ($request->filled('ano_escolar_id')) {
+            $query->where('livros.ano_escolar_id', $request->ano_escolar_id);
+        }
+
+
+
+        $items = $query->paginate(20)->withQueryString();
+
+        // Calculate total in stock across all books
+        $totalInStock = DB::table('stocks')
+            ->whereNull('deleted_at')
+            ->sum('quantidade');
+
+        // Fetch dropdown options
+        $disciplinas = Disciplina::orderBy('nome')->get(['id', 'nome']);
+        $editoras = Editora::orderBy('nome')->get(['id', 'nome', 'codigo']);
+        $anosEscolares = AnoEscolar::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Stock/Index', [
+            'items' => $items,
+            'totalInStock' => $totalInStock,
+            'filters' => $request->only(['titulo', 'isbn', 'disciplina_id', 'editora_id', 'ano_escolar_id']),
+            'disciplinas' => $disciplinas,
+            'editoras' => $editoras,
+            'anosEscolares' => $anosEscolares,
+        ]);
+    }
+}
