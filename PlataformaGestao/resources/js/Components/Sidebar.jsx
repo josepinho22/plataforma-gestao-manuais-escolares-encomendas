@@ -98,10 +98,10 @@ export default function Sidebar({ user }) {
       },
       {
           label: "Stock",
-          href: "", 
+          href: route('stock.index'), 
           active: isActive(currentPath, "/stock"),
           icon: <FaWarehouse className="w-5 h-5" />,
-          disabled: true,
+          disabled: false,
       },
 
     
