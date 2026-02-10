@@ -86,10 +86,10 @@ export default function Sidebar({ user }) {
     },
     {
       label: "Gerir Listas de Livros",
-      href: "#", 
-      active: isActive(currentPath, "/listas"),
+      href: route('books.index'), 
+      active: isActive(currentPath, "/books.index"),
       icon: <FaListAlt className="w-5 h-5" />,
-      disabled: true,
+      disabled: false,
     },
 
     
@@ -98,7 +98,7 @@ export default function Sidebar({ user }) {
       },
       {
           label: "Stock",
-          href: "#", 
+          href: "", 
           active: isActive(currentPath, "/stock"),
           icon: <FaWarehouse className="w-5 h-5" />,
           disabled: true,
