@@ -75,8 +75,8 @@ export default function Dashboard({ auth }) {
 
 function QuickAction({ icon, label, variant = 'light' }) {
     const isDark = variant === 'dark';
-    const themeClasses = isDark 
-        ? 'bg-[#0a0a1a] text-white border-transparent' 
+    const themeClasses = isDark
+        ? 'bg-[#0a0a1a] text-white border-transparent'
         : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50';
 
     return (
@@ -105,9 +105,9 @@ function StatCard({ stat }) {
                     <span className="text-[10px] font-bold uppercase tracking-wider">{stat.label}</span>
                 </div>
                 <span className="text-5xl font-bold block">{stat.value}</span>
-                
-                <Link 
-                    href="#" 
+
+                <Link
+                    href="#"
                     className={`mt-4 w-fit py-1.5 px-3 rounded-lg text-[10px] font-bold text-white flex items-center gap-2 hover:opacity-90 transition-opacity ${stat.btnColor}`}
                 >
                     Ver Detalhes <FaArrowRight className="w-3 h-3"/>
