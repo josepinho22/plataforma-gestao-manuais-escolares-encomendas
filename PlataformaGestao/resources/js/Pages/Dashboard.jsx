@@ -5,7 +5,6 @@ import {
   FaBook,
   FaHistory,
   FaPlus,
-  FaSearch,
   FaFileAlt,
   FaCheckCircle,
   FaExclamationTriangle,
@@ -32,7 +31,7 @@ export default function Dashboard({ auth }) {
       label: "Faltam Livros",
       value: "8",
       icon: <FaExclamationTriangle />,
-      href: route("orders.clientes.index"), 
+      href: route("orders.clientes.index"),
       color: "text-red-700",
       btnColor: "bg-red-600 hover:bg-red-700",
     },
@@ -40,7 +39,7 @@ export default function Dashboard({ auth }) {
       label: "Aguarda Encapamento",
       value: "12",
       icon: <FaBoxOpen />,
-      href: route("orders.clientes.index"), 
+      href: route("orders.clientes.index"),
       color: "text-yellow-700",
       btnColor: "bg-yellow-600 hover:bg-yellow-700",
     },
@@ -59,7 +58,7 @@ export default function Dashboard({ auth }) {
       label: "Já Encomendadas",
       value: "8",
       icon: <FaTruck />,
-      href: route("orders.editora.index"), 
+      href: route("orders.editora.index"),
       color: "text-blue-700",
       btnColor: "bg-blue-600 hover:bg-blue-700",
     },
@@ -70,7 +69,7 @@ export default function Dashboard({ auth }) {
       <Head title="Dashboard" />
 
       <div className="space-y-8">
-        
+        {/* Barra de ações rápidas */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
@@ -80,43 +79,23 @@ export default function Dashboard({ auth }) {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            
+            {/* Nova encomenda cliente */}
             <QuickAction
               icon={<FaPlus />}
-              label="Nova Encomenda"
+              label="Nova Encomenda Cliente"
               primary
-              onClick={() => {}}
+              href={route("orders.create")}
             />
 
-            
-            <QuickLink
-              icon={<FaSearch />}
-              label="Consultar Clientes"
-              href={route("orders.clientes.index")}
-            />
-            <QuickLink
-              icon={<FaSearch />}
-              label="Consultar Editoras"
-              href={route("orders.editora.index")}
-            />
-
-            
-            <QuickLink
-              icon={<FaFileAlt />}
-              label="Relatórios Clientes"
-              href="#"
-            />
-            <QuickLink
-              icon={<FaFileAlt />}
-              label="Relatórios Editoras"
-              href="#"
-            />
+            {/* Mantém só relatórios */}
+            <QuickLink icon={<FaFileAlt />} label="Relatórios Clientes" href="#" />
+            <QuickLink icon={<FaFileAlt />} label="Relatórios Editoras" href="#" />
           </div>
         </div>
 
-        
+        {/* Secções */}
         <div className="space-y-8">
-          
+          {/* Encomendas Clientes */}
           <div className="space-y-4">
             <SectionHeader
               title="Encomendas Clientes"
@@ -129,7 +108,7 @@ export default function Dashboard({ auth }) {
             </div>
           </div>
 
-          
+          {/* Encomendas Editora */}
           <div className="space-y-4">
             <SectionHeader
               title="Encomendas Editora"
@@ -143,7 +122,7 @@ export default function Dashboard({ auth }) {
           </div>
         </div>
 
-        
+        {/* Gestão da Plataforma */}
         <div>
           <h3 className="text-lg font-bold text-gray-900 mb-4 px-1">
             Gestão da Plataforma

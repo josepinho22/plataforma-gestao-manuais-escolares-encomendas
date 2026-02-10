@@ -85,12 +85,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/escolas/{escola}', [EscolasController::class, 'destroy'])
         ->name('escolas.destroy');
 
-    // ---------- ALUNOS ----------
-    Route::get('/alunos/criar', [AlunosController::class, 'create'])
-        ->name('alunos.create');
-
-    Route::post('/alunos', [AlunosController::class, 'store'])
-        ->name('alunos.store');
+// ---------- ALUNOS ----------
+Route::get('/alunos', [AlunosController::class, 'index'])->name('alunos.index');
+Route::post('/alunos', [AlunosController::class, 'store'])->name('alunos.store');
+Route::put('/alunos/{aluno}', [AlunosController::class, 'update'])->name('alunos.update');
 });
 
 Route::middleware('auth')->group(function () {

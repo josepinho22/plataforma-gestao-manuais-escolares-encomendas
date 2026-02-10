@@ -44,6 +44,17 @@ export default function Sidebar({ user }) {
       icon: <FaBox className="w-5 h-5" />,
       disabled: false,
     },
+    
+    {
+      section: "Alunos",
+    },
+    {
+      label: "Gerir Alunos",
+      href: route('alunos.index'),
+      active: isActive(currentPath, "/alunos"),
+      icon: <FaBook className="w-5 h-5" />,
+      disabled: false,
+    },
 
     
     {
