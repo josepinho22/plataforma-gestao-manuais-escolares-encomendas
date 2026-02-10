@@ -6,11 +6,13 @@ use App\Http\Controllers\EncomendasEditoraController;
 use App\Http\Controllers\CatalogoLivrosController;
 use App\Http\Controllers\EscolasController;
 use App\Http\Controllers\AlunosController;
+use App\Http\Controllers\LivroController;
+use App\Http\Controllers\StockController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\LivroController;
+
 
 
 // 1. Rota Pública
@@ -93,6 +95,10 @@ Route::get('/alunos', [AlunosController::class, 'index'])->name('alunos.index');
 Route::post('/alunos', [AlunosController::class, 'store'])->name('alunos.store');
 Route::put('/alunos/{aluno}', [AlunosController::class, 'update'])->name('alunos.update');
 });
+// Rotas para stock
+Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+
 
 Route::middleware('auth')->group(function () {
     // Perfil
