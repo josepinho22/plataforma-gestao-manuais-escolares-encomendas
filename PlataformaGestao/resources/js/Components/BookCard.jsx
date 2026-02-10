@@ -1,9 +1,9 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { FaGripVertical, FaTrash } from "react-icons/fa";
 
-export default function BookCard({ item, index, isRemovable, onRemove }) {
+export default function BookCard({ item, index, isRemovable, onRemove, draggablePrefix = '' }) {
     return (
-        <Draggable draggableId={String(item.id)} index={index}>
+        <Draggable draggableId={`${draggablePrefix}${item.id}`} index={index}>
             {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
