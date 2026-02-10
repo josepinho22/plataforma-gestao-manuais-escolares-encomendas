@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('disciplina_id')->nullable();
             $table->unsignedBigInteger('manual_livro_id')->nullable();
             $table->unsignedBigInteger('caderno_livro_id')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('lista_id')

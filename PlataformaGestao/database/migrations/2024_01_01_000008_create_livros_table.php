@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('isbn')->nullable();
             $table->decimal('preco');
             $table->boolean('ativo')->default(true);
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();;
+            $table->timestamp('updated_at')->nullable();;
             $table->softDeletes();
 
             // Note: Original schema has index on 'papelaria_id' which doesn't exist as a column.

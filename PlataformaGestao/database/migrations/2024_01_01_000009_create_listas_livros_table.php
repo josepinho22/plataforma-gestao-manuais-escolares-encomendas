@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('escola_id')->nullable();
             $table->unsignedBigInteger('ano_letivo_id')->nullable();
             $table->unsignedBigInteger('ano_escolar_id')->nullable();
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             // Note: Original index includes 'papelaria_id' which doesn't exist.

@@ -10,7 +10,10 @@ use App\Http\Controllers\AlunosController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\LivroController;
 
+
+// 1. Rota Pública
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -97,5 +100,17 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+// 2. Rotas Protegidas (Todas as rotas do Papelix devem estar aqui dentro)
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+
+
+    // Catálogo (Nome exato exigido pela Sidebar)
+    //Route::get('/catalogo/livros', [LivroController::class, 'index'])->name('catalogo.livros.index');
+    Route::get('/books-list', [LivroController::class, 'index'])->name('books.index');
+    Route::get('/api/get-lista-books', [LivroController::class, 'getListaBooks'])->name('api.lista.books');
+    Route::post('/catalogo/livros', [LivroController::class, 'store'])->name('book-lists.store');
+    });
+
 
 require __DIR__ . '/auth.php';

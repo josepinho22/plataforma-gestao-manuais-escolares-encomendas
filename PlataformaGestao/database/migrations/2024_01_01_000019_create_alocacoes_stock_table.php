@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('rececao_editora_item_id')->nullable();
             $table->unsignedBigInteger('encomenda_aluno_item_id')->nullable();
             $table->integer('quantidade_alocada');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
             $table->softDeletes();
 
             $table->foreign('livro_id')
