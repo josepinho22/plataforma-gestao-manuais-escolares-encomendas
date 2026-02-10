@@ -1,8 +1,8 @@
 import React from 'react';
 import { FaSave } from "react-icons/fa";
 
-export default function FilterSection({ 
-    data, setData, concelhos, availableEscolas, anos_letivos, anos_escolares, handleSave, processing 
+export default function FilterSection({
+    data, setData, concelhos, availableEscolas, anos_letivos, anos_escolares, handleSave, handleCancel, processing
 }) {
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -36,7 +36,10 @@ export default function FilterSection({
                 </div>
                 
                 <div className="flex justify-end border-t pt-4 gap-2">
-                     <button className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition">
+                     <button
+                        onClick={handleCancel}
+                        className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition"
+                    >
                         Cancelar
                     </button>
                     <button 
