@@ -8,10 +8,11 @@ import BookCard from '@/Components/BookCard';
 import FilterSection from '@/Components/FilterSection';
 
 export default function BooksLists({ auth, catalog = [], concelhos = [], escolas = [], anos_letivos = [], anos_escolares = [] }) {
-    const [currentList, setCurrentList] = useState([]); 
-    const [searchTerm, setSearchTerm] = useState(""); 
+    const [currentList, setCurrentList] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false); 
 
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, transform } = useForm({
         concelho: '',
         escola_id: '',
         ano_letivo_id: '',
@@ -20,9 +21,13 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     });
 
     useEffect(() => {
+    console.log('🔄 useEffect executado - Carregando lista...');
+    console.log('Filtros:', { escola_id: data.escola_id, ano_letivo_id: data.ano_letivo_id, ano_escolar_id: data.ano_escolar_id });
+
     if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
-        setCurrentList([]); 
-        
+        console.log('✅ Todos os filtros preenchidos, buscando lista...');
+        setCurrentList([]);
+
         axios.get(route('api.lista.books'), {
             params: {
                 escola_id: data.escola_id,
@@ -31,17 +36,17 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             }
         })
         .then(res => {
-            console.log("📚 Resposta da API:", res.data);
-            const novaLista = Array.isArray(res.data) ? res.data.filter(item => item && item.id) : [];
-            console.log("📋 Lista processada:", novaLista);
+            console.log('📦 Resposta da API:', res.data);
+            const novaLista = Array.isArray(res.data) ? res.data : [];
+            console.log('📋 Lista carregada:', novaLista.length, 'itens');
             setCurrentList(novaLista);
         })
         .catch(err => {
-            console.error("❌ Erro ao buscar lista:", err);
-            console.error("❌ Detalhes:", err.response?.data);
+            console.error("❌ Erro ao carregar lista:", err);
             setCurrentList([]);
         });
     } else {
+        console.log('⚠️ Filtros incompletos, lista vazia');
         setCurrentList([]);
     }
 }, [data.escola_id, data.ano_letivo_id, data.ano_escolar_id]);
@@ -51,9 +56,14 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         return escolas.filter(escola => String(escola.concelho_id) === String(data.concelho));
     }, [data.concelho, escolas]);
 
-    const filteredCatalog = catalog.filter(book => 
-        book.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCatalog = catalog.filter(book => {
+        // Validar se o item tem ID e título válidos
+        if (!book || !book.id) {
+            console.warn('⚠️ Item inválido no catálogo:', book);
+            return false;
+        }
+        return book.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     const onDragEnd = (result) => {
     const { source, destination } = result;
@@ -61,31 +71,116 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
     if (source.droppableId === 'catalog' && destination.droppableId === 'currentList') {
         const item = filteredCatalog[source.index];
-        if (item && item.id && !currentList.find(i => i.id === item.id)) {
-            setCurrentList(prev => [...prev, item]);
+
+        // Validar se o item existe e tem ID válido
+        if (!item || !item.id) {
+            console.error('❌ Item inválido ao arrastar:', { index: source.index, item });
+            return;
         }
+
+        const itensParaAdicionar = [item];
+
+        // Se for um MANUAL, procurar o CADERNO correspondente
+        if (item.tipo === 'MANUAL' && item.disciplina_id) {
+            const caderno = catalog.find(livro =>
+                livro.tipo === 'CADERNO_ATIVIDADES' &&
+                livro.disciplina_id === item.disciplina_id &&
+                livro.ano_escolar_id === item.ano_escolar_id
+            );
+
+            if (caderno) {
+                console.log('📚 Caderno correspondente encontrado:', caderno.titulo);
+                itensParaAdicionar.push(caderno);
+            }
+        }
+
+        // Adicionar os itens que não existem na lista
+        setCurrentList(prev => {
+            const novosItens = itensParaAdicionar.filter(
+                novoItem => !prev.find(i => i.id === novoItem.id)
+            );
+
+            if (novosItens.length > 0) {
+                console.log('✅ Adicionando itens:', novosItens.map(i => i.titulo));
+                return [...prev, ...novosItens];
+            } else {
+                console.log('⚠️ Todos os itens já existem na lista');
+                return prev;
+            }
+        });
+    }
+};
+
+    const handleCancel = () => {
+    console.log('🔄 Cancelar - Recarregando lista original...');
+    // Recarregar a lista original do banco de dados
+    if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
+        axios.get(route('api.lista.books'), {
+            params: {
+                escola_id: data.escola_id,
+                ano_letivo_id: data.ano_letivo_id,
+                ano_escolar_id: data.ano_escolar_id
+            }
+        })
+        .then(res => {
+            const novaLista = Array.isArray(res.data) ? res.data : [];
+            setCurrentList(novaLista);
+            console.log('✅ Lista original recarregada');
+        })
+        .catch(err => {
+            console.error("❌ Erro ao recarregar lista:", err);
+        });
+    } else {
+        // Se não há filtros selecionados, apenas limpa a lista
+        setCurrentList([]);
     }
 };
 
     const handleSave = () => {
+    console.log('=== handleSave chamado ===');
+    console.log('data:', data);
+    console.log('currentList:', currentList);
+
+    const itemsIds = currentList.map(item => item.id);
+    console.log('items (IDs):', itemsIds);
+
+    // Usar transform ANTES de post para modificar os dados
+    transform((formData) => {
+        console.log('🔧 Transform - data recebido:', formData);
+        const transformed = {
+            ...formData,
+            items: itemsIds
+        };
+        console.log('🔧 Transform - data transformado:', transformed);
+        return transformed;
+    });
+
+    console.log('Chamando post...');
+
+    // Agora chamar post
     post(route('book-lists.store'), {
-        data: {
-            ...data,
-            items: currentList.map(item => item.id) 
-        },
         preserveScroll: true,
-        onSuccess: () => {
-            alert('Lista Salva com Sucesso!');
+        onSuccess: (response) => {
+            console.log('✅ Sucesso!', response);
+            setShowSuccessModal(true);
+            setTimeout(() => setShowSuccessModal(false), 3000);
         },
+        onError: (errors) => {
+            console.error('❌ Erro ao salvar:', errors);
+            alert('Erro ao salvar a lista. Verifique o console para mais detalhes.');
+        },
+        onFinish: () => {
+            console.log('=== Requisição finalizada ===');
+        }
     });
 };
 
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Gerir Listas" />
-            <div className="space-y-6 max-w-7xl mx-auto pb-10 px-4">
+            <div className="space-y-6">
                 
-                <FilterSection 
+                <FilterSection
                     data={data}
                     setData={setData}
                     concelhos={concelhos}
@@ -93,8 +188,21 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                     anos_letivos={anos_letivos}
                     anos_escolares={anos_escolares}
                     handleSave={handleSave}
+                    handleCancel={handleCancel}
                     processing={processing}
                 />
+
+                {/* Modal de Sucesso */}
+                {showSuccessModal && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                        <div className="bg-green-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce pointer-events-auto">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="font-bold text-lg">Lista Salva com Sucesso!</span>
+                        </div>
+                    </div>
+                )}
 
                 <DragDropContext onDragEnd={onDragEnd}>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -111,15 +219,21 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             >
                
                 {currentList && currentList.length > 0 ? (
-                    currentList.map((item, index) => (
-                        <BookCard
-                            key={`list-item-${item.id}`}
-                            item={item}
-                            index={index}
-                            isRemovable
-                            onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
-                        />
-                    ))
+                    currentList.map((item, index) => {
+                       
+                        if (!item || !item.id) return null;
+                        
+                        return (
+                            <BookCard
+                                key={`list-item-${item.id}-${index}`}
+                                item={item}
+                                index={index}
+                                isRemovable
+                                onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
+                                draggablePrefix="list-"
+                            />
+                        );
+                    })
                 ) : (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                         <p className="text-sm italic">Arraste livros do catálogo para aqui</p>
@@ -150,7 +264,12 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                                 {(provided) => (
                                     <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2">
                                         {filteredCatalog.map((item, index) => (
-                                            <BookCard key={`cat-${item.id}`} item={item} index={index} />
+                                            <BookCard
+                                                key={`cat-${item.id}`}
+                                                item={item}
+                                                index={index}
+                                                draggablePrefix="catalog-"
+                                            />
                                         ))}
                                         {provided.placeholder}
                                     </div>

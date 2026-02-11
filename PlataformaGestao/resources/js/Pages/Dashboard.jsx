@@ -1,130 +1,160 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import { 
-    FaBoxOpen, FaBook, FaPlus, FaSearch, FaFileAlt, 
-    FaCheckCircle, FaExclamationTriangle, FaTruck, FaClipboardList, FaThLarge, FaArrowRight 
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Head } from "@inertiajs/react";
+import {
+  FaBoxOpen,
+  FaBook,
+  FaHistory,
+  FaPlus,
+  FaFileAlt,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaTruck,
+  FaClipboardList,
 } from "react-icons/fa";
+import SectionHeader from "@/Components/Dashboard/SectionHeader";
+import StatCard from "@/Components/Dashboard/StatCard";
+import QuickAction from "@/Components/Dashboard/QuickAction";
+import QuickLink from "@/Components/Dashboard/QuickLink";
+import FeatureCard from "@/Components/Dashboard/FeatureCard";
 
 export default function Dashboard({ auth }) {
-    
-    const customerStats = [
-        { label: 'Pronto para Levantar', value: '1', icon: <FaCheckCircle />, color: 'border-green-500 text-green-600', btnColor: 'bg-green-600' },
-        { label: 'Faltam Livros', value: '2', icon: <FaExclamationTriangle />, color: 'border-red-500 text-red-600', btnColor: 'bg-red-600' },
-        { label: 'Aguarda Encapamento', value: '1', icon: <FaBoxOpen />, color: 'border-orange-500 text-orange-600', btnColor: 'bg-orange-600' },
-    ];
+  const customerStats = [
+    {
+      label: "Pronto p/ levantar",
+      value: "24",
+      icon: <FaCheckCircle />,
+      href: route("orders.clientes.index"),
+      color: "text-green-700 ",
+      btnColor: "bg-green-600 hover:bg-green-700",
+    },
+    {
+      label: "Faltam Livros",
+      value: "8",
+      icon: <FaExclamationTriangle />,
+      href: route("orders.clientes.index"),
+      color: "text-red-700",
+      btnColor: "bg-red-600 hover:bg-red-700",
+    },
+    {
+      label: "Aguarda Encapamento",
+      value: "12",
+      icon: <FaBoxOpen />,
+      href: route("orders.clientes.index"),
+      color: "text-yellow-700",
+      btnColor: "bg-yellow-600 hover:bg-yellow-700",
+    },
+  ];
 
-    const publisherStats = [
-        { label: 'Para Encomendar', value: '7', icon: <FaClipboardList />, color: 'border-blue-400 text-blue-500', btnColor: 'bg-blue-500' },
-        { label: 'Encomendadas', value: '8', icon: <FaTruck />, color: 'border-purple-400 text-purple-500', btnColor: 'bg-purple-500' },
-    ];
+  const publisherStats = [
+    {
+      label: "Para encomendar",
+      value: "24",
+      icon: <FaClipboardList />,
+      href: route("orders.editora.index"),
+      color: "text-orange-700",
+      btnColor: "bg-orange-600 hover:bg-orange-700",
+    },
+    {
+      label: "Já Encomendadas",
+      value: "8",
+      icon: <FaTruck />,
+      href: route("orders.editora.index"),
+      color: "text-blue-700",
+      btnColor: "bg-blue-600 hover:bg-blue-700",
+    },
+  ];
 
-    return (
-        <AuthenticatedLayout user={auth.user}>
-            <Head title="Dashboard" />
+  return (
+    <AuthenticatedLayout user={auth.user}>
+      <Head title="Dashboard" />
 
-            <div className="max-w-7xl mx-auto space-y-10">
-                
-                {/* 1. CABEÇALHO */}
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-                    <p className="text-sm text-gray-500">Bem-vindo ao PAPELIX - Gestão de Livros Escolares</p>
-                </div>
+      <div className="space-y-8">
+        {/* Barra de ações rápidas */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Olá, {auth.user.name} 👋
+            </h2>
+            <p className="text-sm text-gray-500">O que pretende fazer hoje?</p>
+          </div>
 
-                {/* 2. ACÇÕES RÁPIDAS */}
-                <section>
-                    <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-widest">Ações Rápidas</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <QuickAction icon={<FaPlus />} label="Nova Encomenda" variant="dark" />
-                        <QuickAction icon={<FaSearch />} label="Consultar Encomendas" />
-                        <QuickAction icon={<FaFileAlt />} label="Ver Relatórios" />
-                    </div>
-                </section>
+          <div className="flex flex-wrap gap-3">
+            {/* Nova encomenda cliente */}
+            <QuickAction
+              icon={<FaPlus />}
+              label="Nova Encomenda Cliente"
+              primary
+              href={route("orders.create")}
+            />
 
-                {/* 3. ENCOMENDAS - CLIENTES */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Encomendas - Clientes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {customerStats.map((stat, i) => (
-                            <StatCard key={i} stat={stat} />
-                        ))}
-                    </div>
-                </section>
-
-                {/* 4. ENCOMENDAS - EDITORA */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Encomendas - Editora</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {publisherStats.map((stat, i) => (
-                            <StatCard key={i} stat={stat} />
-                        ))}
-                    </div>
-                </section>
-
-                {/* 5. CARDS DE GESTÃO */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FeatureCard title="Listas de Manuais" desc="Gerir listas de livros por escola e ano letivo" icon={<FaBook className="text-blue-500" />} />
-                    <FeatureCard title="Encomendas" desc="Ver e gerir todas as encomendas de alunos" icon={<FaPlus className="text-green-500" />} />
-                    <FeatureCard title="Catálogo" desc="Gerir livros, preços e editoras" icon={<FaThLarge className="text-purple-500" />} />
-                </div>
-            </div>
-        </AuthenticatedLayout>
-    );
-}
-
-// --- SUB-COMPONENTES ---
-
-function QuickAction({ icon, label, variant = 'light' }) {
-    const isDark = variant === 'dark';
-    const themeClasses = isDark 
-        ? 'bg-[#0a0a1a] text-white border-transparent' 
-        : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50';
-
-    return (
-        <button className={`relative overflow-hidden flex flex-col items-center justify-center p-8 rounded-lg border shadow-sm transition-all group ${themeClasses}`}>
-            {/* Ícone Decorativo no Fundo */}
-            <div className="relative z-10 flex flex-col items-center">
-                <span className="text-2xl mb-3">{icon}</span>
-                <span className="text-xs font-bold uppercase tracking-tight">{label}</span>
-            </div>
-        </button>
-    );
-}
-
-function StatCard({ stat }) {
-    return (
-        <div className={`relative overflow-hidden bg-white p-6 rounded-xl border-2 ${stat.color} flex flex-col items-start gap-4 shadow-sm`}>
-            {/* Ícone Decorativo no Fundo */}
-            <div className="absolute -right-4 -bottom-4 opacity-10 text-8xl transform rotate-12">
-                {stat.icon}
-            </div>
-
-            {/* Conteúdo Principal */}
-            <div className="relative z-10 w-full">
-                <div className="flex items-center gap-2 opacity-80 mb-1">
-                    <span className="text-sm">{stat.icon}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">{stat.label}</span>
-                </div>
-                <span className="text-5xl font-bold block">{stat.value}</span>
-                
-                <Link 
-                    href="#" 
-                    className={`mt-4 w-fit py-1.5 px-3 rounded-lg text-[10px] font-bold text-white flex items-center gap-2 hover:opacity-90 transition-opacity ${stat.btnColor}`}
-                >
-                    Ver Detalhes <FaArrowRight className="w-3 h-3"/>
-                </Link>
-            </div>
+            {/* Mantém só relatórios */}
+            <QuickLink icon={<FaFileAlt />} label="Relatórios Clientes" href="#" />
+            <QuickLink icon={<FaFileAlt />} label="Relatórios Editoras" href="#" />
+          </div>
         </div>
-    );
-}
 
-function FeatureCard({ title, desc, icon }) {
-    return (
-        <div className="group bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-gray-50 rounded-lg text-sm group-hover:bg-white transition-colors">{icon}</div>
-                <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
+        {/* Secções */}
+        <div className="space-y-8">
+          {/* Encomendas Clientes */}
+          <div className="space-y-4">
+            <SectionHeader
+              title="Encomendas Clientes"
+              icon={<FaBoxOpen className="text-blue-600" />}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {customerStats.map((stat, index) => (
+                <StatCard key={index} stat={stat} />
+              ))}
             </div>
-            <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>
+          </div>
+
+          {/* Encomendas Editora */}
+          <div className="space-y-4">
+            <SectionHeader
+              title="Encomendas Editora"
+              icon={<FaTruck className="text-purple-600" />}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+              {publisherStats.map((stat, index) => (
+                <StatCard key={index} stat={stat} />
+              ))}
+            </div>
+          </div>
         </div>
-    );
+
+        {/* Gestão da Plataforma */}
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 mb-4 px-1">
+            Gestão da Plataforma
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FeatureCard
+              title="Listas de Manuais"
+              desc="Gerir manuais por escola e ano"
+              icon={<FaBook />}
+              color="bg-blue-600"
+              href="#"
+            />
+
+            <FeatureCard
+              title="Gestão de Encomendas"
+              desc="Painel completo de encomendas"
+              icon={<FaBoxOpen />}
+              color="bg-green-600"
+              href={route("orders.clientes.index")}
+            />
+
+            <FeatureCard
+              title="Histórico Completo"
+              desc="Consultar anos anteriores"
+              icon={<FaHistory />}
+              color="bg-purple-600"
+              href="#"
+            />
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
+  );
 }

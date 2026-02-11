@@ -28,6 +28,9 @@ class LivroController extends Controller
         'isbn' => $livro->isbn,
         'preco' => $livro->preco,
         'year' => $livro->anoEscolar->name ?? 'N/D',
+        'tipo' => $livro->tipo,
+        'disciplina_id' => $livro->disciplina_id,
+        'ano_escolar_id' => $livro->ano_escolar_id,
     ]);
 
         // Renderizar a página com os dados iniciais dos filtros
@@ -53,10 +56,12 @@ class LivroController extends Controller
 
     if ($lista) {
         return response()->json(
-    $lista->itens()->with('manualLivro')->get()->map(function($item) {
+    $lista->itens()->with(['manualLivro.anoEscolar'])->get()->map(function($item) {
         return [
-            'id' => $item->manual_livro_id, 
+            'id' => $item->manual_livro_id,
             'titulo' => $item->manualLivro->titulo ?? 'Sem título',
+            'isbn' => $item->manualLivro->isbn ?? '',
+            'preco' => $item->manualLivro->preco ?? 0,
             'year' => $item->manualLivro->anoEscolar->name ?? 'N/D',
         ];
     })
@@ -67,6 +72,10 @@ class LivroController extends Controller
 
 public function store(Request $request)
 {
+    \Log::info('=== STORE: Iniciando salvamento ===');
+    \Log::info('Request all:', $request->all());
+    \Log::info('Items recebidos:', ['items' => $request->items, 'count' => count($request->items ?? [])]);
+
     // 1. Validar os dados
     $request->validate([
         'escola_id' => 'required|exists:escolas,id',
@@ -81,15 +90,25 @@ public function store(Request $request)
         'ano_escolar_id' => $request->ano_escolar_id,
     ]);
 
+    \Log::info('Lista criada/atualizada:', ['lista_id' => $lista->id]);
 
     $lista->itens()->delete();
 
-    foreach ($request->items as $livroId) {
-        $lista->itens()->create([
-            'manual_livro_id' => $livroId, 
-            'lista_id' => $lista->id 
-        ]);
+    \Log::info('Itens antigos deletados');
+
+    if ($request->items && count($request->items) > 0) {
+        foreach ($request->items as $livroId) {
+            \Log::info('Criando item:', ['livro_id' => $livroId]);
+            $lista->itens()->create([
+                'manual_livro_id' => $livroId,
+                'lista_id' => $lista->id
+            ]);
+        }
+        \Log::info('Total de itens criados:', ['count' => count($request->items)]);
+    } else {
+        \Log::warning('Nenhum item para salvar!');
     }
+
     return redirect()->back()->with('success', 'Lista gravada com sucesso!');
 }
 }
