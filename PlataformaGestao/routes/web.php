@@ -36,17 +36,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/encomendas/clientes', [OrderController::class, 'index'])
         ->name('orders.clientes.index');
 
-    Route::get('/encomendas', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/encomendas/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::post('/encomendas', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/encomendas/clientes/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/encomendas/clientes', [OrderController::class, 'store'])->name('orders.store');
 
     // APIs para suporte à criação de encomendas
     Route::get('/api/students/lookup', [OrderController::class, 'studentLookup'])->name('api.students.lookup');
     Route::get('/api/books/search', [OrderController::class, 'searchBooks'])->name('api.books.search');
+    Route::get('/api/books/all-search', [OrderController::class, 'searchAllBooks'])->name('api.books.allSearch');
 
     // APIs para processamento de encomendas
     Route::patch('/api/orders/{orderId}/items/{itemId}', [OrderController::class, 'updateItem'])->name('api.orders.updateItem');
+    Route::patch('/api/orders/{orderId}/items/{itemId}/edit', [OrderController::class, 'editItem'])->name('api.orders.editItem');
     Route::get('/api/orders/{orderId}/history', [OrderController::class, 'getHistory'])->name('api.orders.history');
+    Route::get('/api/orders/{orderId}/pdf', [OrderController::class, 'printPDF'])->name('api.orders.pdf');
+    Route::delete('/api/orders/{orderId}', [OrderController::class, 'destroy'])->name('api.orders.destroy');
 
     // ---------- ENCOMENDAS (Editora) ----------
     Route::get('/encomendas/editora', [EncomendasEditoraController::class, 'index'])
