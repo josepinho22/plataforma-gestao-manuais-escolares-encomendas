@@ -26,20 +26,31 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-blue-50">
-            <Head title="Login - Papelix" />
+            <Head title="Login" />
 
             {/* Cartão de Login */}
             <div className="w-full sm:max-w-md mt-6 px-6 py-10 bg-white shadow-xl overflow-hidden sm:rounded-lg">
                 
-                {/* 1. LOGO */}
+                {/* NOVO: Link para Registro no Topo */}
+                <div className="flex justify-end mb-6">
+                    <p className="text-sm text-gray-600">
+                        Não tem conta?{' '}
+                        <Link
+                            href={route('register')}
+                            className="font-bold text-blue-600 hover:text-blue-500 hover:underline transition-colors"
+                        >
+                            Registe-se aqui
+                        </Link>
+                    </p>
+                </div>
+
+                {/* 1. LOGO (Atualizado para o nome do ficheiro correto) */}
                 <div className="flex justify-center mb-6">
-                    {/* Certifica-te que a imagem está em public/images/logo_papelix.png */}
                     <img 
-                        src="images/Papelock_logo.png" 
+                        src="/images/Papelock_logo.png" 
                         alt="Papelix Logo" 
-                        className="h-50 w-auto mx-auto" 
+                        className="h-40 w-auto mx-auto object-contain" 
                     />
-                    {/* Se a imagem não carregar, aparece texto temporário */}
                     <span className="sr-only">Papelix</span>
                 </div>
 
@@ -49,7 +60,7 @@ export default function Login({ status, canResetPassword }) {
                         Bem-vindo
                     </h2>
                     <p className="mt-2 text-sm text-gray-500">
-                        Faça login para acessar a plataforma de gestão de manuais escolares
+                        Faça login para aceder à plataforma de gestão
                     </p>
                 </div>
 
@@ -66,10 +77,11 @@ export default function Login({ status, canResetPassword }) {
                             type="email"
                             name="email"
                             value={data.email}
-                            className="mt-1 block w-full bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4"
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
                             placeholder="seu@email.com"
                             autoComplete="username"
                             onChange={(e) => setData('email', e.target.value)}
+                            required
                         />
                         <InputError message={errors.email} className="mt-2" />
                     </div>
@@ -84,10 +96,11 @@ export default function Login({ status, canResetPassword }) {
                             type="password"
                             name="password"
                             value={data.password}
-                            className="mt-1 block w-full bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4"
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
                             placeholder="........"
                             autoComplete="current-password"
                             onChange={(e) => setData('password', e.target.value)}
+                            required
                         />
                         <InputError message={errors.password} className="mt-2" />
                     </div>
@@ -108,9 +121,9 @@ export default function Login({ status, canResetPassword }) {
                     <div className="mt-6">
                         <button
                             disabled={processing}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition duration-150 ease-in-out"
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all duration-150 ease-in-out disabled:opacity-50"
                         >
-                            Entrar
+                            {processing ? 'A entrar...' : 'Entrar'}
                         </button>
                     </div>
                 </form>

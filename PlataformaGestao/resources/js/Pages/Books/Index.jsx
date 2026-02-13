@@ -4,13 +4,16 @@ import { useState, useMemo, useEffect } from 'react';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { FaSearch } from "react-icons/fa";
 import axios from 'axios';
-
 import BookCard from '@/Components/BookCard';
 import FilterSection from '@/Components/FilterSection';
 
-export default function BooksLists({ auth, catalog = [], concelhos = [], escolas = [], anos_letivos = [], anos_escolares = [] }) {
+export default function BooksLists({ auth, catalog = [], concelhos = [], escolas = [], anos_letivos = [], anos_escolares = [], disciplinas = [], ano_letivo_vigente_id = null }) {
     const [currentList, setCurrentList] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    
+    // 1. Estado para a Disciplina Selecionada
+    const [selectedDisciplina, setSelectedDisciplina] = useState(""); 
+    
     const [showSuccessModal, setShowSuccessModal] = useState(false); 
 
     const { data, setData, post, processing, transform } = useForm({
@@ -21,160 +24,130 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         items: [],
     });
 
+    // 2. Disciplinas vindas do backend (já ordenadas)
+    const disciplinasOrdenadas = useMemo(() => {
+        return disciplinas || [];
+    }, [disciplinas]);
+
+    // 3. Definir ano letivo vigente como padrão ao carregar
     useEffect(() => {
-    console.log('🔄 useEffect executado - Carregando lista...');
-    console.log('Filtros:', { escola_id: data.escola_id, ano_letivo_id: data.ano_letivo_id, ano_escolar_id: data.ano_escolar_id });
+        if (ano_letivo_vigente_id && !data.ano_letivo_id) {
+            setData('ano_letivo_id', ano_letivo_vigente_id);
+        }
+    }, [ano_letivo_vigente_id]);
 
-    if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
-        console.log('✅ Todos os filtros preenchidos, buscando lista...');
-        setCurrentList([]);
+    // 4. Lógica de Filtragem Combinada (Pesquisa + Disciplina)
+    const filteredCatalog = catalog.filter(book => {
+        if (!book || !book.id) return false;
 
-        axios.get(route('api.lista.books'), {
-            params: {
-                escola_id: data.escola_id,
-                ano_letivo_id: data.ano_letivo_id,
-                ano_escolar_id: data.ano_escolar_id
-            }
-        })
-        .then(res => {
-            console.log('📦 Resposta da API:', res.data);
-            const novaLista = Array.isArray(res.data) ? res.data : [];
-            console.log('📋 Lista carregada:', novaLista.length, 'itens');
-            setCurrentList(novaLista);
-        })
-        .catch(err => {
-            console.error("❌ Erro ao carregar lista:", err);
+        const matchesSearch = book.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             book.isbn?.includes(searchTerm);
+        
+        const matchesDisciplina = selectedDisciplina === "" || 
+                                 book.disciplina?.nome === selectedDisciplina;
+
+        return matchesSearch && matchesDisciplina;
+    });
+
+    useEffect(() => {
+        if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
             setCurrentList([]);
-        });
-    } else {
-        console.log('⚠️ Filtros incompletos, lista vazia');
-        setCurrentList([]);
-    }
-}, [data.escola_id, data.ano_letivo_id, data.ano_escolar_id]);
+            axios.get(route('api.lista.books'), {
+                params: {
+                    escola_id: data.escola_id,
+                    ano_letivo_id: data.ano_letivo_id,
+                    ano_escolar_id: data.ano_escolar_id
+                }
+            })
+            .then(res => {
+                const novaLista = Array.isArray(res.data) ? res.data : [];
+                setCurrentList(novaLista);
+            })
+            .catch(err => {
+                console.error("❌ Erro ao carregar lista:", err);
+                setCurrentList([]);
+            });
+        } else {
+            setCurrentList([]);
+        }
+    }, [data.escola_id, data.ano_letivo_id, data.ano_escolar_id]);
 
     const availableEscolas = useMemo(() => {
         if (!data.concelho) return [];
         return escolas.filter(escola => String(escola.concelho_id) === String(data.concelho));
     }, [data.concelho, escolas]);
 
-    const filteredCatalog = catalog.filter(book => {
-        // Validar se o item tem ID e título válidos
-        if (!book || !book.id) {
-            console.warn('⚠️ Item inválido no catálogo:', book);
-            return false;
-        }
-        return book.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
-    });
-
     const onDragEnd = (result) => {
-    const { source, destination } = result;
-    if (!destination) return;
+        const { source, destination } = result;
+        if (!destination) return;
 
-    if (source.droppableId === 'catalog' && destination.droppableId === 'currentList') {
-        const item = filteredCatalog[source.index];
+        if (source.droppableId === 'catalog' && destination.droppableId === 'currentList') {
+            const item = filteredCatalog[source.index];
+            if (!item || !item.id) return;
 
-        // Validar se o item existe e tem ID válido
-        if (!item || !item.id) {
-            console.error('❌ Item inválido ao arrastar:', { index: source.index, item });
-            return;
-        }
+            const itensParaAdicionar = [item];
 
-        const itensParaAdicionar = [item];
-
-        // Se for um MANUAL, procurar o CADERNO correspondente
-        if (item.tipo === 'MANUAL' && item.disciplina_id) {
-            const caderno = catalog.find(livro =>
-                livro.tipo === 'CADERNO_ATIVIDADES' &&
-                livro.disciplina_id === item.disciplina_id &&
-                livro.ano_escolar_id === item.ano_escolar_id
-            );
-
-            if (caderno) {
-                console.log('📚 Caderno correspondente encontrado:', caderno.titulo);
-                itensParaAdicionar.push(caderno);
+            // Se arrastar MANUAL, buscar o CADERNO_ATIVIDADES correspondente
+            if (item.tipo === 'MANUAL' && item.disciplina_id) {
+                const caderno = catalog.find(livro =>
+                    livro.tipo === 'CADERNO_ATIVIDADES' &&
+                    livro.disciplina_id === item.disciplina_id &&
+                    livro.ano_escolar_id === item.ano_escolar_id
+                );
+                if (caderno) itensParaAdicionar.push(caderno);
             }
-        }
 
-        // Adicionar os itens que não existem na lista
-        setCurrentList(prev => {
-            const novosItens = itensParaAdicionar.filter(
-                novoItem => !prev.find(i => i.id === novoItem.id)
-            );
+            // Se arrastar CADERNO_ATIVIDADES, buscar o MANUAL correspondente
+            if (item.tipo === 'CADERNO_ATIVIDADES' && item.disciplina_id) {
+                const manual = catalog.find(livro =>
+                    livro.tipo === 'MANUAL' &&
+                    livro.disciplina_id === item.disciplina_id &&
+                    livro.ano_escolar_id === item.ano_escolar_id
+                );
+                if (manual) itensParaAdicionar.push(manual);
+            }
 
-            if (novosItens.length > 0) {
-                console.log('✅ Adicionando itens:', novosItens.map(i => i.titulo));
+            setCurrentList(prev => {
+                const novosItens = itensParaAdicionar.filter(
+                    novoItem => !prev.find(i => i.id === novoItem.id)
+                );
                 return [...prev, ...novosItens];
-            } else {
-                console.log('⚠️ Todos os itens já existem na lista');
-                return prev;
-            }
-        });
-    }
-};
+            });
+        }
+    };
 
     const handleCancel = () => {
-    console.log('🔄 Cancelar - Recarregando lista original...');
-    // Recarregar a lista original do banco de dados
-    if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
-        axios.get(route('api.lista.books'), {
-            params: {
-                escola_id: data.escola_id,
-                ano_letivo_id: data.ano_letivo_id,
-                ano_escolar_id: data.ano_escolar_id
-            }
-        })
-        .then(res => {
-            const novaLista = Array.isArray(res.data) ? res.data : [];
-            setCurrentList(novaLista);
-            console.log('✅ Lista original recarregada');
-        })
-        .catch(err => {
-            console.error("❌ Erro ao recarregar lista:", err);
-        });
-    } else {
-        // Se não há filtros selecionados, apenas limpa a lista
-        setCurrentList([]);
-    }
-};
+        if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
+            axios.get(route('api.lista.books'), {
+                params: {
+                    escola_id: data.escola_id,
+                    ano_letivo_id: data.ano_letivo_id,
+                    ano_escolar_id: data.ano_escolar_id
+                }
+            })
+            .then(res => {
+                setCurrentList(Array.isArray(res.data) ? res.data : []);
+            });
+        } else {
+            setCurrentList([]);
+        }
+    };
 
     const handleSave = () => {
-    console.log('=== handleSave chamado ===');
-    console.log('data:', data);
-    console.log('currentList:', currentList);
-
-    const itemsIds = currentList.map(item => item.id);
-    console.log('items (IDs):', itemsIds);
-
-    // Usar transform ANTES de post para modificar os dados
-    transform((formData) => {
-        console.log('🔧 Transform - data recebido:', formData);
-        const transformed = {
+        const itemsIds = currentList.map(item => item.id);
+        transform((formData) => ({
             ...formData,
             items: itemsIds
-        };
-        console.log('🔧 Transform - data transformado:', transformed);
-        return transformed;
-    });
+        }));
 
-    console.log('Chamando post...');
-
-    // Agora chamar post
-    post(route('book-lists.store'), {
-        preserveScroll: true,
-        onSuccess: (response) => {
-            console.log('✅ Sucesso!', response);
-            setShowSuccessModal(true);
-            setTimeout(() => setShowSuccessModal(false), 3000);
-        },
-        onError: (errors) => {
-            console.error('❌ Erro ao salvar:', errors);
-            alert('Erro ao salvar a lista. Verifique o console para mais detalhes.');
-        },
-        onFinish: () => {
-            console.log('=== Requisição finalizada ===');
-        }
-    });
-};
+        post(route('book-lists.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowSuccessModal(true);
+                setTimeout(() => setShowSuccessModal(false), 3000);
+            },
+        });
+    };
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -197,9 +170,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                 {showSuccessModal && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
                         <div className="bg-green-500 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce pointer-events-auto">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
                             <span className="font-bold text-lg">Lista Salva com Sucesso!</span>
                         </div>
                     </div>
@@ -207,76 +177,95 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
                 <DragDropContext onDragEnd={onDragEnd}>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* LISTA ATUAL */}
-<div className="space-y-4">
-    <h3 className="font-bold text-gray-700">Lista Atual ({currentList.length})</h3>
-    <Droppable droppableId="currentList">
-        {(provided, snapshot) => (
-            <div 
-                {...provided.droppableProps} 
-                ref={provided.innerRef} 
-                className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors 
-                    ${snapshot.isDraggingOver ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200'}`}
-            >
-               
-                {currentList && currentList.length > 0 ? (
-                    currentList.map((item, index) => {
-                       
-                        if (!item || !item.id) return null;
                         
-                        return (
-                            <BookCard
-                                key={`list-item-${item.id}-${index}`}
-                                item={item}
-                                index={index}
-                                isRemovable
-                                onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
-                                draggablePrefix="list-"
-                            />
-                        );
-                    })
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                        <p className="text-sm italic">Arraste livros do catálogo para aqui</p>
-                    </div>
-                )}
-                {provided.placeholder}
-            </div>
-        )}
-    </Droppable>
-</div>
-
-                        {/* CATÁLOGO */}
+                        {/* LISTA ATUAL */}
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="font-bold text-gray-700">Catálogo de Livros</h3>
-                                <div className="relative w-64">
-                                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Pesquisar..." 
-                                        value={searchTerm} 
-                                        onChange={e => setSearchTerm(e.target.value)} 
-                                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black" 
-                                    />
-                                </div>
-                            </div>
-                            <Droppable droppableId="catalog">
-                                {(provided) => (
-                                    <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2">
-                                        {filteredCatalog.map((item, index) => (
-                                            <BookCard
-                                                key={`cat-${item.id}`}
-                                                item={item}
-                                                index={index}
-                                                draggablePrefix="catalog-"
-                                            />
-                                        ))}
+                            <h3 className="font-bold text-gray-700">Lista Atual ({currentList.length})</h3>
+                            <Droppable droppableId="currentList">
+                                {(provided, snapshot) => (
+                                    <div 
+                                        {...provided.droppableProps} 
+                                        ref={provided.innerRef} 
+                                        className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors 
+                                            ${snapshot.isDraggingOver ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200'}`}
+                                    >
+                                        {currentList.length > 0 ? (
+                                            currentList.map((item, index) => (
+                                                <BookCard
+                                                    key={`list-item-${item.id}-${index}`}
+                                                    item={item}
+                                                    index={index}
+                                                    isRemovable
+                                                    onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
+                                                    draggablePrefix="list-"
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                                <p className="text-sm italic">Arraste livros do catálogo para aqui</p>
+                                            </div>
+                                        )}
                                         {provided.placeholder}
                                     </div>
                                 )}
                             </Droppable>
                         </div>
+
+                        {/* CATÁLOGO COM FILTROS */}
+                        <div className="space-y-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <h3 className="font-bold text-gray-700">Catálogo de Livros</h3>
+                                
+                                <div className="flex flex-1 w-full sm:w-auto gap-2">
+                                    {/* Select de Disciplinas */}
+                                    <select
+                                        value={selectedDisciplina}
+                                        onChange={(e) => setSelectedDisciplina(e.target.value)}
+                                        className="w-1/3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black"
+                                    >
+                                        <option value="">Disciplinas</option>
+                                        {disciplinasOrdenadas.map(disc => (
+                                            <option key={disc.id} value={disc.nome}>{disc.nome}</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Input de Pesquisa */}
+                                    <div className="relative flex-1">
+                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Pesquisar..." 
+                                            value={searchTerm} 
+                                            onChange={e => setSearchTerm(e.target.value)} 
+                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Droppable droppableId="catalog">
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2">
+                                        {filteredCatalog.length > 0 ? (
+                                            filteredCatalog.map((item, index) => (
+                                                <BookCard
+                                                    key={`cat-${item.id}`}
+                                                    item={item}
+                                                    index={index}
+                                                    draggablePrefix="catalog-"
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-10 text-gray-400 text-sm">
+                                                Nenhum livro encontrado.
+                                            </div>
+                                        )}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </div>
+
                     </div>
                 </DragDropContext>
             </div>

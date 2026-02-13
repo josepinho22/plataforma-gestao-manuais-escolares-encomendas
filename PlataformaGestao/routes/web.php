@@ -15,14 +15,9 @@ use Inertia\Inertia;
 
 
 
-// 1. Rota Pública
+// 1. Rota Raiz - Redireciona diretamente para o Login
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

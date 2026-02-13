@@ -1,8 +1,5 @@
+import { useEffect } from 'react';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Register() {
@@ -13,108 +10,119 @@ export default function Register() {
         password_confirmation: '',
     });
 
+    useEffect(() => {
+        return () => {
+            reset('password', 'password_confirmation');
+        };
+    }, []);
+
     const submit = (e) => {
         e.preventDefault();
-
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
+        post(route('register'));
     };
 
     return (
-        <GuestLayout>
-            <Head title="Register" />
+        <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-blue-50 px-4">
+            <Head title="Registo - Papelix" />
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
-
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.name} className="mt-2" />
+            {/* Cartão de Registo */}
+            <div className="w-full sm:max-w-md mt-6 px-8 py-10 bg-white shadow-xl overflow-hidden sm:rounded-lg">
+                
+                {/* Link para Voltar ao Login no Topo */}
+                <div className="flex justify-end mb-6">
+                    <p className="text-sm text-gray-600">
+                        Já tem conta?{' '}
+                        <Link
+                            href={route('login')}
+                            className="font-bold text-blue-600 hover:text-blue-500 hover:underline transition-colors"
+                        >
+                            Entre aqui
+                        </Link>
+                    </p>
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel
-                        htmlFor="password_confirmation"
-                        value="Confirm Password"
-                    />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) =>
-                            setData('password_confirmation', e.target.value)
-                        }
-                        required
-                    />
-
-                    <InputError
-                        message={errors.password_confirmation}
-                        className="mt-2"
+                {/* 1. LOGO PAPELOCK */}
+                <div className="flex justify-center mb-6">
+                    <img 
+                        src="/images/Papelock_logo.png" 
+                        alt="Papelock Logo" 
+                        className="h-32 w-auto mx-auto object-contain" 
                     />
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <Link
-                        href={route('login')}
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
+                {/* 2. TÍTULOS */}
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900">Criar Conta</h2>
+                    <p className="mt-2 text-sm text-gray-500">
+                        Registe-se para gerir os seus manuais escolares
+                    </p>
                 </div>
-            </form>
-        </GuestLayout>
+
+                {/* 3. FORMULÁRIO */}
+                <form onSubmit={submit} className="space-y-4">
+                    
+                    {/* Nome */}
+                    <div>
+                        <label className="block font-medium text-sm text-gray-700">Nome Completo</label>
+                        <input
+                            type="text"
+                            value={data.name}
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
+                            onChange={(e) => setData('name', e.target.value)}
+                            required
+                        />
+                        <InputError message={errors.name} className="mt-2" />
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                        <label className="block font-medium text-sm text-gray-700">Email Profissional</label>
+                        <input
+                            type="email"
+                            value={data.email}
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
+                            onChange={(e) => setData('email', e.target.value)}
+                            required
+                        />
+                        <InputError message={errors.email} className="mt-2" />
+                    </div>
+
+                    {/* Palavra-passe */}
+                    <div>
+                        <label className="block font-medium text-sm text-gray-700">Palavra-passe</label>
+                        <input
+                            type="password"
+                            value={data.password}
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
+                            onChange={(e) => setData('password', e.target.value)}
+                            required
+                        />
+                        <InputError message={errors.password} className="mt-2" />
+                    </div>
+
+                    {/* Confirmar Palavra-passe */}
+                    <div>
+                        <label className="block font-medium text-sm text-gray-700">Confirmar Palavra-passe</label>
+                        <input
+                            type="password"
+                            value={data.password_confirmation}
+                            className="mt-1 block w-full bg-gray-50 border-gray-200 focus:border-blue-500 focus:bg-white focus:ring-0 rounded-md py-3 px-4 transition-all"
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    {/* Botão Registar */}
+                    <div className="pt-4">
+                        <button
+                            disabled={processing}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50"
+                        >
+                            {processing ? 'A processar...' : 'Criar Conta'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     );
 }

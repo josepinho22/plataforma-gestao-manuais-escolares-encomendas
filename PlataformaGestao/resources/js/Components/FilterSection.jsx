@@ -5,8 +5,8 @@ export default function FilterSection({
     data, setData, concelhos, availableEscolas, anos_letivos, anos_escolares, handleSave, handleCancel, processing
 }) {
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex flex-col gap-6">
+        <div className="bg-white py-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex flex-col gap-6 px-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
                     <FilterSelect 
                         label="Concelho" 
