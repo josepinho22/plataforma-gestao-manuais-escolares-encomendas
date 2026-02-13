@@ -18,8 +18,6 @@ class EncomendaAlunoSeeder extends Seeder
         $anoLetivoAtual = AnoLetivo::where('nome', '2024/2025')->first();
         $escolas = Escola::where('isAtivo', true)->get();
 
-        $statusOptions = ['AGUARDA_LIVROS', 'AGUARDA_ENSACAMENTO', 'AGUARDA_ENCAPAMENTO', 'AGUARDA_LEVANTAMENTO', 'ENTREGUE'];
-
         $observacoes = [
             null,
             'Cliente solicita urgência',
@@ -39,7 +37,6 @@ class EncomendaAlunoSeeder extends Seeder
                 ->where('ano_escolar_id', $anoEscolar->id)
                 ->first();
 
-            // Se não encontrar, criar sem lista
             EncomendaAluno::create([
                 'aluno_id' => $aluno->id,
                 'nif' => $aluno->nif,
@@ -50,7 +47,6 @@ class EncomendaAlunoSeeder extends Seeder
                 'ano_letivo_id' => $anoLetivoAtual->id,
                 'ano_escolar_id' => $anoEscolar->id,
                 'lista_id' => $lista?->id,
-                'status' => $statusOptions[array_rand($statusOptions)],
                 'observacao' => $observacoes[array_rand($observacoes)],
             ]);
         }
