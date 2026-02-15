@@ -42,11 +42,20 @@ class EncomendaLivroAlunoItemSeeder extends Seeder
                     $this->criarItemEncomenda($encomenda, $livro->id);
                 }
             }
+
+            $this->garantirMinimoDeLivros($encomenda, 2);
         }
     }
 
     private function criarItemEncomenda(EncomendaAluno $encomenda, int $livroId): void
     {
+        if (EncomendaLivroAlunoItem::where('encomenda_aluno_id', $encomenda->id)
+            ->where('livro_id', $livroId)
+            ->exists()
+        ) {
+            return;
+        }
+
         $quantidade = 1;
         $encapar = (bool) rand(0, 1);
 
@@ -66,5 +75,50 @@ class EncomendaLivroAlunoItemSeeder extends Seeder
             'entregue' => $entregue,
             'ensacado' => $ensacado,
         ]);
+    }
+
+    private function garantirMinimoDeLivros(EncomendaAluno $encomenda, int $minimo): void
+    {
+        $existentes = EncomendaLivroAlunoItem::where('encomenda_aluno_id', $encomenda->id)
+            ->pluck('livro_id')
+            ->all();
+
+        $qtdExistente = count($existentes);
+        if ($qtdExistente >= $minimo) {
+            return;
+        }
+
+        $necessarios = $minimo - $qtdExistente;
+
+        $livros = Livro::where('ano_escolar_id', $encomenda->ano_escolar_id)
+            ->where('ativo', true)
+            ->whereNotIn('id', $existentes)
+            ->inRandomOrder()
+            ->take($necessarios)
+            ->get();
+
+        foreach ($livros as $livro) {
+            $this->criarItemEncomenda($encomenda, $livro->id);
+        }
+
+        $existentesAtualizados = EncomendaLivroAlunoItem::where('encomenda_aluno_id', $encomenda->id)
+            ->pluck('livro_id')
+            ->all();
+
+        $qtdAtual = count($existentesAtualizados);
+        if ($qtdAtual >= $minimo) {
+            return;
+        }
+
+        $necessarios = $minimo - $qtdAtual;
+        $livrosExtra = Livro::where('ativo', true)
+            ->whereNotIn('id', $existentesAtualizados)
+            ->inRandomOrder()
+            ->take($necessarios)
+            ->get();
+
+        foreach ($livrosExtra as $livro) {
+            $this->criarItemEncomenda($encomenda, $livro->id);
+        }
     }
 }
