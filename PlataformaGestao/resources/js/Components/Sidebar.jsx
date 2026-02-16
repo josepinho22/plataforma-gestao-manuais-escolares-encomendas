@@ -33,7 +33,7 @@ export default function Sidebar({ user }) {
     {
       label: "Encomendas - Clientes",
       href: route("orders.clientes.index"),
-      active: isActive(currentPath, "/encomendas"),
+      active: isActive(currentPath, "/encomendas/clientes"),
       icon: <FaBox className="w-5 h-5" />,
       disabled: false,
     },
@@ -100,6 +100,17 @@ export default function Sidebar({ user }) {
           label: "Stock",
           href: route('stock.index'), 
           active: isActive(currentPath, "/stock"),
+          icon: <FaWarehouse className="w-5 h-5" />,
+          disabled: false,
+      },
+
+      {
+      section: "Gestão",
+      },
+      {
+          label: "Gestão",
+          href: route('gestao.index'), 
+          active: isActive(currentPath, "/gestao"),
           icon: <FaWarehouse className="w-5 h-5" />,
           disabled: false,
       },
