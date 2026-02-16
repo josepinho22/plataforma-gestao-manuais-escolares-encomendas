@@ -24,7 +24,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         items: [],
     });
 
-    // 2. Disciplinas vindas do backend (já ordenadas)
+    // 2. Disciplinas vindas do backend 
     const disciplinasOrdenadas = useMemo(() => {
         return disciplinas || [];
     }, [disciplinas]);
@@ -36,7 +36,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         }
     }, [ano_letivo_vigente_id]);
 
-    // 4. Lógica de Filtragem Combinada (Pesquisa + Disciplina)
+    // 4. Lógica de Filtragem Combinada 
     const filteredCatalog = catalog.filter(book => {
         if (!book || !book.id) return false;
 
@@ -117,26 +117,23 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     };
 
     const handleCancel = () => {
-        if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
-            axios.get(route('api.lista.books'), {
-                params: {
-                    escola_id: data.escola_id,
-                    ano_letivo_id: data.ano_letivo_id,
-                    ano_escolar_id: data.ano_escolar_id
-                }
-            })
-            .then(res => {
-                setCurrentList(Array.isArray(res.data) ? res.data : []);
-            });
-        } else {
-            setCurrentList([]);
-        }
+        setData({
+            concelho: '',
+            escola_id: '',
+            ano_letivo_id: ano_letivo_vigente_id || '',
+            ano_escolar_id: '',
+            items: [],
+        });
+        setCurrentList([]);
+        setSearchTerm('');
+        setSelectedDisciplina('');
     };
 
     const handleSave = () => {
         const itemsIds = currentList.map(item => item.id);
         transform((formData) => ({
             ...formData,
+            ano_letivo_id: ano_letivo_vigente_id,
             items: itemsIds
         }));
 
@@ -145,6 +142,10 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             onSuccess: () => {
                 setShowSuccessModal(true);
                 setTimeout(() => setShowSuccessModal(false), 3000);
+                // Atualizar o filtro para refletir o ano vigente após salvar
+                if (data.ano_letivo_id !== ano_letivo_vigente_id) {
+                    setData('ano_letivo_id', ano_letivo_vigente_id);
+                }
             },
         });
     };

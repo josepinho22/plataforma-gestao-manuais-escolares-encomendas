@@ -11,6 +11,7 @@ use App\Models\AnoEscolar;
 use App\Models\AnoLetivo;
 use App\Models\ListaLivro;
 use App\Models\Livro;
+use App\Models\Concelho;
 use App\Models\AuditLog;
 
 class OrderController extends Controller
@@ -230,6 +231,9 @@ class OrderController extends Controller
     {
         $schools = Escola::where('isAtivo', true)
             ->orderBy('nome')
+            ->get(['id', 'nome', 'concelho_id']);
+
+        $concelhos = Concelho::orderBy('nome')
             ->get(['id', 'nome']);
 
         $anos_escolares = AnoEscolar::orderBy('id')
@@ -237,12 +241,13 @@ class OrderController extends Controller
             ->map(function($ano) {
                 return [
                     'id' => $ano->id,
-                    'nome' => $ano->name, // Map 'name' to 'nome' for frontend consistency
+                    'nome' => $ano->name,
                 ];
             });
 
         return Inertia::render('Orders/Create', [
             'schools' => $schools,
+            'concelhos' => $concelhos,
             'anos_escolares' => $anos_escolares,
         ]);
     }
@@ -413,19 +418,6 @@ class OrderController extends Controller
             'items.*.encapar' => 'boolean',
         ]);
 
-        $encomendaExistente = EncomendaAluno::where('nif', $validated['nif'])
-            ->where('escola_id', $validated['escola_id'])
-            ->where('ano_letivo_id', $validated['ano_letivo_id'])
-            ->where('ano_escolar_id', $validated['ano_escolar_id'])
-            ->whereNotIn('status', ['ENTREGUE', 'CANCELADA']) // Ignora se já estiver fechada
-            ->first();
-
-        if ($encomendaExistente) {
-            return back()->withErrors([
-                'nif' => 'Este aluno já possui uma encomenda ativa (#' . $encomendaExistente->id . ') nesta escola e ano.'
-            ])->withInput();
-        }
-
         try {
             DB::beginTransaction();
 
@@ -467,7 +459,7 @@ class OrderController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('orders.index')
+                ->route('orders.clientes.index')
                 ->with('success', 'Encomenda criada com sucesso! ID: #' . $encomenda->id);
 
         } catch (\Exception $e) {
@@ -610,19 +602,184 @@ class OrderController extends Controller
      */
     private function formatAction($action, $changes)
     {
+        $livroTitulo = $changes['livro_titulo'] ?? '';
+
         $messages = [
-            'updated_encapado' => $changes['new_value']
-                ? "Marcou '{$changes['livro_titulo']}' como encapado"
-                : "Desmarcou encapamento de '{$changes['livro_titulo']}'",
-            'updated_ensacado' => $changes['new_value']
-                ? "Marcou '{$changes['livro_titulo']}' como ensacado"
-                : "Desmarcou ensacamento de '{$changes['livro_titulo']}'",
-            'updated_entregue' => $changes['new_value']
-                ? "Marcou '{$changes['livro_titulo']}' como entregue"
-                : "Desmarcou entrega de '{$changes['livro_titulo']}'",
-            'status_auto_updated' => "Status alterado automaticamente de '{$changes['old_status']}' para '{$changes['new_status']}'",
+            'updated_encapado' => ($changes['new_value'] ?? false)
+                ? "Marcou '{$livroTitulo}' como encapado"
+                : "Desmarcou encapamento de '{$livroTitulo}'",
+            'updated_ensacado' => ($changes['new_value'] ?? false)
+                ? "Marcou '{$livroTitulo}' como ensacado"
+                : "Desmarcou ensacamento de '{$livroTitulo}'",
+            'updated_entregue' => ($changes['new_value'] ?? false)
+                ? "Marcou '{$livroTitulo}' como entregue"
+                : "Desmarcou entrega de '{$livroTitulo}'",
+            'status_auto_updated' => "Status alterado automaticamente de '" . ($changes['old_status'] ?? '') . "' para '" . ($changes['new_status'] ?? '') . "'",
+            'updated_quantidade' => "Alterou quantidade de '{$livroTitulo}' de " . ($changes['old_value'] ?? '?') . " para " . ($changes['new_value'] ?? '?'),
+            'updated_livro' => "Trocou livro de '" . ($changes['old_livro'] ?? '?') . "' para '" . ($changes['new_livro'] ?? '?') . "'",
+            'order_deleted' => "Encomenda eliminada",
         ];
 
-        return $messages[$action] ?? 'Ação não reconhecida';
+        return $messages[$action] ?? $action;
+    }
+
+    /**
+     * Gerar PDF da encomenda
+     */
+    public function printPDF($orderId)
+    {
+        $encomenda = EncomendaAluno::with([
+            'escola', 'anoEscolar', 'anoLetivo',
+            'itens.livro.editora'
+        ])->findOrFail($orderId);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.encomenda', [
+            'encomenda' => $encomenda,
+        ]);
+
+        return $pdf->stream("encomenda-{$orderId}.pdf");
+    }
+
+    /**
+     * Eliminar encomenda (soft delete)
+     */
+    public function destroy($orderId)
+    {
+        try {
+            $order = EncomendaAluno::findOrFail($orderId);
+
+            AuditLog::create([
+                'user_id' => auth()->id(),
+                'entity_type' => 'EncomendaAluno',
+                'entity_id' => $order->id,
+                'action' => 'order_deleted',
+                'changes' => [
+                    'nif' => $order->nif,
+                    'nome' => $order->nome,
+                    'status' => $order->status,
+                ],
+                'created_at' => now(),
+            ]);
+
+            // Soft delete dos itens e da encomenda
+            $order->itens()->delete();
+            $order->delete();
+
+            return response()->json(['success' => true, 'message' => 'Encomenda eliminada com sucesso']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Erro ao eliminar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Editar item da encomenda (quantidade ou livro)
+     */
+    public function editItem(Request $request, $orderId, $itemId)
+    {
+        $validated = $request->validate([
+            'quantidade' => 'sometimes|integer|min:1',
+            'livro_id' => 'sometimes|exists:livros,id',
+        ]);
+
+        try {
+            $item = EncomendaLivroAlunoItem::where('id', $itemId)
+                ->where('encomenda_aluno_id', $orderId)
+                ->firstOrFail();
+
+            // Atualizar quantidade
+            if (isset($validated['quantidade']) && $validated['quantidade'] !== $item->quantidade) {
+                $oldQty = $item->quantidade;
+                $item->quantidade = $validated['quantidade'];
+
+                AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'entity_type' => 'EncomendaLivroAlunoItem',
+                    'entity_id' => $item->id,
+                    'action' => 'updated_quantidade',
+                    'changes' => [
+                        'livro_titulo' => $item->livro?->titulo ?? 'N/A',
+                        'old_value' => $oldQty,
+                        'new_value' => $validated['quantidade'],
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
+
+            // Trocar livro
+            if (isset($validated['livro_id']) && $validated['livro_id'] !== $item->livro_id) {
+                $oldLivro = $item->livro?->titulo ?? 'N/A';
+                $newLivro = Livro::find($validated['livro_id']);
+
+                $item->livro_id = $validated['livro_id'];
+
+                AuditLog::create([
+                    'user_id' => auth()->id(),
+                    'entity_type' => 'EncomendaLivroAlunoItem',
+                    'entity_id' => $item->id,
+                    'action' => 'updated_livro',
+                    'changes' => [
+                        'old_livro' => $oldLivro,
+                        'new_livro' => $newLivro?->titulo ?? 'N/A',
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
+
+            $item->save();
+
+            // Recarregar com relação
+            $item->load('livro.editora', 'livro.disciplina');
+
+            return response()->json([
+                'success' => true,
+                'item' => [
+                    'id' => $item->id,
+                    'title' => $item->livro?->titulo ?? 'N/A',
+                    'isbn' => $item->livro?->isbn,
+                    'editora' => $item->livro?->editora?->nome,
+                    'price' => (float) ($item->livro?->preco ?? 0),
+                    'quantity' => $item->quantidade,
+                    'encapar' => $item->encapar,
+                    'encapado' => $item->encapado,
+                    'ensacado' => $item->ensacado,
+                    'entregue' => $item->entregue,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Erro ao editar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Pesquisar qualquer livro ativo (para adicionar livros fora da lista)
+     */
+    public function searchAllBooks(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['books' => []]);
+        }
+
+        $books = Livro::where('ativo', true)
+            ->where(function ($q) use ($query) {
+                $q->where('titulo', 'like', "%{$query}%")
+                  ->orWhere('isbn', 'like', "%{$query}%");
+            })
+            ->with('editora:id,nome')
+            ->limit(20)
+            ->get()
+            ->map(function ($livro) {
+                return [
+                    'id' => $livro->id,
+                    'titulo' => $livro->titulo,
+                    'isbn' => $livro->isbn,
+                    'preco' => (float) $livro->preco,
+                    'editora_nome' => $livro->editora?->nome ?? 'N/A',
+                    'tipo' => $livro->tipo === 'MANUAL' ? 'Manual' : 'Caderno',
+                ];
+            });
+
+        return response()->json(['books' => $books]);
     }
 }
