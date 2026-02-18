@@ -167,26 +167,27 @@ class CatalogoLivrosController extends Controller
     }
 
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'titulo' => ['required', 'string', 'max:255'],
-        'disciplina_id' => ['required', 'integer', 'exists:disciplinas,id'],
-        'ano_escolar_id' => ['required', 'integer', 'exists:anos_escolares,id'],
-        'tipo' => ['required', Rule::in(['manual', 'caderno_atividades'])],
-        'preco' => ['required', 'numeric', 'min:0'],
-        'editora_id' => ['required', 'integer', 'exists:editoras,id'],
-        'isbn' => ['nullable', 'string', 'max:255'],
-        'ativo' => ['nullable', 'boolean'],
-    ]);
+    {
+        $data = $request->validate([
+            'titulo' => ['required', 'string', 'max:255'],
+            'disciplina_id' => ['required', 'integer', 'exists:disciplinas,id'],
+            'ano_escolar_id' => ['required', 'integer', 'exists:anos_escolares,id'],
+            'tipo' => ['required', Rule::in(['manual', 'caderno_atividades'])],
+            'preco' => ['required', 'numeric', 'min:0'],
+            'editora_id' => ['required', 'integer', 'exists:editoras,id'],
 
-    
-    if (!array_key_exists('ativo', $data)) $data['ativo'] = true;
+            
+            'isbn' => ['required', 'string', 'max:255'],
 
-    Livro::create($data);
+            'ativo' => ['required', 'boolean'],
+        ]);
 
-    return redirect()->route('catalogo.livros.index')
-        ->with('success', 'Livro criado com sucesso.');
-}
+        Livro::create($data);
+
+        return redirect()
+            ->route('catalogo.livros.index')
+            ->with('success', 'Livro criado com sucesso.');
+    }
 
     public function destroy(Livro $livro)
     {

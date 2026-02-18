@@ -35,6 +35,7 @@ class EncomendasEditoraController extends Controller
                     'id' => $it->id,
                     'title' => $it->livro?->titulo ?? '—',
                     'isbn' => $it->livro?->isbn ?? '—',
+                    'unit_price' => (float) ($it->livro?->preco ?? 0),
                     'qty_ordered' => (int) ($it->qtd_solicitada ?? 0),
                     'qty_received' => (int) ($it->qtd_recebida_total ?? 0),
                 ];

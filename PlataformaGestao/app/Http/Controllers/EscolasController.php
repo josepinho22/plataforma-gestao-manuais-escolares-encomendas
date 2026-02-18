@@ -37,10 +37,10 @@ class EscolasController extends Controller
 
         Escola::create($data);
 
-        return redirect()
-            ->route('escolas.create')
-            ->with('success', 'Escola adicionada com sucesso.');
-    }
+return redirect()
+    ->route('escolas.index')
+    ->with('success', 'Escola adicionada com sucesso.');
+}
 
     public function index(Request $request)
 {

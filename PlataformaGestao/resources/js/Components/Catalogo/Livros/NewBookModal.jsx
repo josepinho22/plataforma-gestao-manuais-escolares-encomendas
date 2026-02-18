@@ -39,13 +39,15 @@ export default function NewBookModal({ open, onClose, filters }) {
     form.post(route("catalogo.livros.store"), {
       preserveScroll: true,
       onSuccess: () => onClose(),
+      onError: () => {
+ 
+      },
     });
   };
 
   return (
     <ModalShell title="Novo Livro" onClose={onClose} size="lg">
       <form onSubmit={submit} className="space-y-5">
-
         {/* Título */}
         <div>
           <label className="block text-sm font-black text-gray-900 mb-2">
@@ -64,7 +66,6 @@ export default function NewBookModal({ open, onClose, filters }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
           {/* Disciplina */}
           <div>
             <label className="block text-sm font-black text-gray-900 mb-2">
@@ -83,6 +84,11 @@ export default function NewBookModal({ open, onClose, filters }) {
                 </option>
               ))}
             </select>
+            {form.errors.disciplina_id && (
+              <p className="text-xs text-red-600 mt-1">
+                {form.errors.disciplina_id}
+              </p>
+            )}
           </div>
 
           {/* Ano Escolar */}
@@ -103,6 +109,11 @@ export default function NewBookModal({ open, onClose, filters }) {
                 </option>
               ))}
             </select>
+            {form.errors.ano_escolar_id && (
+              <p className="text-xs text-red-600 mt-1">
+                {form.errors.ano_escolar_id}
+              </p>
+            )}
           </div>
 
           {/* Tipo */}
@@ -119,6 +130,9 @@ export default function NewBookModal({ open, onClose, filters }) {
               <option value="manual">Manual</option>
               <option value="caderno_atividades">Caderno de Atividades</option>
             </select>
+            {form.errors.tipo && (
+              <p className="text-xs text-red-600 mt-1">{form.errors.tipo}</p>
+            )}
           </div>
 
           {/* Preço */}
@@ -135,6 +149,9 @@ export default function NewBookModal({ open, onClose, filters }) {
               onChange={(e) => form.setData("preco", e.target.value)}
               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
             />
+            {form.errors.preco && (
+              <p className="text-xs text-red-600 mt-1">{form.errors.preco}</p>
+            )}
           </div>
         </div>
 
@@ -156,6 +173,9 @@ export default function NewBookModal({ open, onClose, filters }) {
               </option>
             ))} 
           </select>
+          {form.errors.editora_id && (
+            <p className="text-xs text-red-600 mt-1">{form.errors.editora_id}</p>
+          )}
         </div>
 
         {/* ISBN */}
@@ -170,6 +190,9 @@ export default function NewBookModal({ open, onClose, filters }) {
             className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
             placeholder="Ex: 978-..."
           />
+          {form.errors.isbn && (
+            <p className="text-xs text-red-600 mt-1">{form.errors.isbn}</p>
+          )}
         </div>
 
         {/* Ativo */}
@@ -191,15 +214,18 @@ export default function NewBookModal({ open, onClose, filters }) {
           >
             Cancelar
           </button>
+
           <button
             type="submit"
             disabled={form.processing}
-            className="px-5 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white font-black"
+            className={`px-5 py-2.5 rounded-xl text-white font-black ${
+              form.processing ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800"
+            }`}
           >
-            Criar
+            {form.processing ? "A criar..." : "Criar"}
           </button>
         </div>
       </form>
     </ModalShell>
   );
-}
+} 
