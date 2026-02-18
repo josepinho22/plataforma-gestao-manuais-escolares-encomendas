@@ -45,10 +45,14 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
         }));
 
         try {
-            await axios.patch(`/api/orders/${order.id}/items/${itemId}`, {
+            const response = await axios.patch(`/api/orders/${order.id}/items/${itemId}`, {
                 field,
                 value: newValue
             });
+            // Atualizar status da encomenda se o backend devolveu um novo status
+            if (response.data.order_status) {
+                setOrder(prev => ({ ...prev, status: response.data.order_status }));
+            }
             loadHistory();
         } catch (error) {
             console.error('Erro ao atualizar item:', error);

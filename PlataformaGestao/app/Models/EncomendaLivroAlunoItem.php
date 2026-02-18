@@ -46,6 +46,6 @@ class EncomendaLivroAlunoItem extends Model
 
     public function alocacoesStock(): HasMany
     {
-        return $this->hasMany(AlocacaoStock::class);
+        return $this->hasMany(AlocacaoStock::class, 'encomenda_aluno_item_id');
     }
 }

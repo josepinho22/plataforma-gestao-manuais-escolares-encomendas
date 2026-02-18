@@ -456,6 +456,9 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Recalcular status com base no stock disponível
+            $this->checkAndUpdateOrderStatus($encomenda->id);
+
             DB::commit();
 
             return redirect()
@@ -505,10 +508,8 @@ class OrderController extends Controller
                 'created_at' => now(),
             ]);
 
-            // Verificar se todos os itens da encomenda foram entregues
-            if ($validated['field'] === 'entregue' && $validated['value'] === true) {
-                $this->checkAndUpdateOrderStatus($orderId);
-            }
+            // Recalcular status da encomenda com base no estado dos itens
+            $newStatus = $this->checkAndUpdateOrderStatus($orderId);
 
             return response()->json([
                 'success' => true,
@@ -519,6 +520,7 @@ class OrderController extends Controller
                     'ensacado' => $item->ensacado,
                     'entregue' => $item->entregue,
                 ],
+                'order_status' => $newStatus ? $this->mapStatus($newStatus) : null,
             ]);
 
         } catch (\Exception $e) {
@@ -530,26 +532,23 @@ class OrderController extends Controller
     }
 
     /**
-     * Verificar se todos os itens foram entregues e atualizar status da encomenda
+     * Recalcular e atualizar status da encomenda com base no estado dos itens
      */
-    private function checkAndUpdateOrderStatus($orderId)
+    private function checkAndUpdateOrderStatus($orderId): ?string
     {
-        $order = EncomendaAluno::with('itens')->find($orderId);
+        $order = EncomendaAluno::with(['itens.alocacoesStock', 'itens.livro.stock'])->find($orderId);
 
         if (!$order) {
-            return;
+            return null;
         }
 
-        $allDelivered = $order->itens->every(function($item) {
-            return $item->entregue === true;
-        });
+        $newStatus = $this->calculateOrderStatus($order);
 
-        if ($allDelivered && $order->status !== 'ENTREGUE') {
+        if ($newStatus !== $order->status) {
             $oldStatus = $order->status;
-            $order->status = 'ENTREGUE';
+            $order->status = $newStatus;
             $order->save();
 
-            // Criar registo de auditoria para a encomenda
             AuditLog::create([
                 'user_id' => auth()->id(),
                 'entity_type' => 'EncomendaAluno',
@@ -557,12 +556,83 @@ class OrderController extends Controller
                 'action' => 'status_auto_updated',
                 'changes' => [
                     'old_status' => $oldStatus,
-                    'new_status' => 'ENTREGUE',
-                    'reason' => 'Todos os itens foram entregues',
+                    'new_status' => $newStatus,
+                    'reason' => $this->getStatusChangeReason($newStatus),
                 ],
                 'created_at' => now(),
             ]);
         }
+
+        return $order->status;
+    }
+
+    /**
+     * Calcular o status correto da encomenda com base no estado dos itens
+     */
+    private function calculateOrderStatus(EncomendaAluno $order): string
+    {
+        $itens = $order->itens;
+
+        if ($itens->isEmpty()) {
+            return 'AGUARDA_LIVROS';
+        }
+
+        // 1. Todos entregues?
+        if ($itens->every(fn($item) => $item->entregue)) {
+            return 'ENTREGUE';
+        }
+
+        // 2. Todos têm stock? (stock geral do livro, alocação específica, ou já processado)
+        $allHaveStock = $itens->every(function ($item) {
+            // Se o item já foi ensacado/encapado/entregue, implica que tem stock
+            if ($item->ensacado || $item->encapado || $item->entregue) {
+                return true;
+            }
+            // Verificar alocação específica ao item
+            $totalAlocado = $item->alocacoesStock->sum('quantidade_alocada');
+            if ($totalAlocado >= $item->quantidade) {
+                return true;
+            }
+            // Verificar stock geral do livro
+            $stockGeral = $item->livro?->stock?->quantidade ?? 0;
+            return $stockGeral >= $item->quantidade;
+        });
+
+        if (!$allHaveStock) {
+            return 'AGUARDA_LIVROS';
+        }
+
+        // 3. Todos ensacados?
+        if (!$itens->every(fn($item) => $item->ensacado)) {
+            return 'AGUARDA_ENSACAMENTO';
+        }
+
+        // 4. Todos os que precisam de encapar estão encapados?
+        $allEncapados = $itens->every(function ($item) {
+            return !$item->encapar || $item->encapado;
+        });
+
+        if (!$allEncapados) {
+            return 'AGUARDA_ENCAPAMENTO';
+        }
+
+        // 5. Tudo pronto
+        return 'AGUARDA_LEVANTAMENTO';
+    }
+
+    /**
+     * Obter razão legível para a mudança de status
+     */
+    private function getStatusChangeReason(string $status): string
+    {
+        return match ($status) {
+            'AGUARDA_LIVROS' => 'Nem todos os itens têm stock alocado',
+            'AGUARDA_ENSACAMENTO' => 'Todos os livros têm stock, aguarda ensacamento',
+            'AGUARDA_ENCAPAMENTO' => 'Todos ensacados, aguarda encapamento',
+            'AGUARDA_LEVANTAMENTO' => 'Todos os itens processados, pronto para levantamento',
+            'ENTREGUE' => 'Todos os itens foram entregues',
+            default => 'Atualização automática de status',
+        };
     }
 
     /**

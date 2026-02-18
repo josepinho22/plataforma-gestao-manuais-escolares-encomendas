@@ -262,7 +262,10 @@ export default function OrdersIndex({ auth, orders, stats, filters, filterOption
             {selectedOrder && (
                 <OrderDetailsModal
                     order={selectedOrder}
-                    onClose={() => setSelectedOrder(null)}
+                    onClose={() => {
+                        setSelectedOrder(null);
+                        router.reload({ preserveScroll: true });
+                    }}
                 />
             )}
         </AuthenticatedLayout>
