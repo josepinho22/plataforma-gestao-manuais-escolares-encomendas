@@ -113,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Route::get('/catalogo/livros', [LivroController::class, 'index'])->name('catalogo.livros.index');
     Route::get('/manuais-list', [ManuaisController::class, 'index'])->name('manuais.index');
     Route::get('/api/get-lista-manuais', [ManuaisController::class, 'getListaBooks'])->name('api.lista.manuais');
-    Route::post('/catalogo/livros', [ManuaisController::class, 'store'])->name('manuais-lists.store');
+    Route::post('/manuais-list', [ManuaisController::class, 'store'])->name('manuais-lists.store');
     });
 
 
