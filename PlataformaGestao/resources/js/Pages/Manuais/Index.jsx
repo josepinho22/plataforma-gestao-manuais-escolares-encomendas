@@ -130,11 +130,15 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     };
 
     const handleSave = () => {
-        const itemsIds = currentList.map(item => item.id);
+        const itemsComPreco = currentList.map(item => ({
+            id: item.id,
+            preco: item.preco,
+        }));
         transform((formData) => ({
             ...formData,
             ano_letivo_id: ano_letivo_vigente_id,
-            items: itemsIds
+            items: itemsComPreco.map(i => i.id),
+            precos: itemsComPreco,
         }));
 
         post(route('manuais-lists.store'), {
@@ -198,6 +202,11 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                                                     index={index}
                                                     isRemovable
                                                     onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
+                                                    onPriceChange={(idx, value) => {
+                                                        setCurrentList(prev => prev.map((it, i) =>
+                                                            i === idx ? { ...it, preco: value } : it
+                                                        ));
+                                                    }}
                                                     draggablePrefix="list-"
                                                 />
                                             ))
@@ -253,6 +262,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                                                     key={`cat-${item.id}`}
                                                     item={item}
                                                     index={index}
+                                                    showUpdateAlert
                                                     draggablePrefix="catalog-"
                                                 />
                                             ))

@@ -32,6 +32,7 @@ class ManuaisController extends Controller
         'tipo' => $livro->tipo,
         'disciplina_id' => $livro->disciplina_id,
         'ano_escolar_id' => $livro->ano_escolar_id,
+        'updated_at' => $livro->updated_at?->toISOString(),
         'disciplina' => $livro->disciplina ? [
             'id' => $livro->disciplina->id,
             'nome' => $livro->disciplina->nome,
@@ -59,28 +60,59 @@ class ManuaisController extends Controller
     /**
      * Método API para carregar livros de uma lista existente ao filtrar
      */
-    public function getListaBooks(Request $request) 
-{
-    $lista = ListaLivro::where('escola_id', $request->escola_id)
-        ->where('ano_letivo_id', $request->ano_letivo_id)
-        ->where('ano_escolar_id', $request->ano_escolar_id)
-        ->first();
+    public function getListaBooks(Request $request)
+    {
+        $lista = ListaLivro::where('escola_id', $request->escola_id)
+            ->where('ano_letivo_id', $request->ano_letivo_id)
+            ->where('ano_escolar_id', $request->ano_escolar_id)
+            ->first();
 
-    if ($lista) {
-        return response()->json(
-    $lista->itens()->with(['manualLivro.anoEscolar'])->get()->map(function($item) {
-        return [
-            'id' => $item->manual_livro_id,
-            'titulo' => $item->manualLivro->titulo ?? 'Sem título',
-            'isbn' => $item->manualLivro->isbn ?? '',
-            'preco' => $item->manualLivro->preco ?? 0,
-            'year' => $item->manualLivro->anoEscolar->name ?? 'N/D',
-        ];
-    })
-);
+        if ($lista) {
+            $items = collect();
+
+            $lista->itens()->with(['manualLivro.anoEscolar', 'manualLivro.disciplina', 'cadernoLivro.anoEscolar', 'cadernoLivro.disciplina'])->get()->each(function($item) use ($items) {
+                if ($item->manualLivro) {
+                    $items->push([
+                        'id' => $item->manualLivro->id,
+                        'titulo' => $item->manualLivro->titulo ?? 'Sem título',
+                        'isbn' => $item->manualLivro->isbn ?? '',
+                        'preco' => $item->manualLivro->preco ?? 0,
+                        'year' => $item->manualLivro->anoEscolar->name ?? 'N/D',
+                        'tipo' => $item->manualLivro->tipo,
+                        'disciplina_id' => $item->manualLivro->disciplina_id,
+                        'ano_escolar_id' => $item->manualLivro->ano_escolar_id,
+                        'updated_at' => $item->manualLivro->updated_at?->toISOString(),
+                        'disciplina' => $item->manualLivro->disciplina ? [
+                            'id' => $item->manualLivro->disciplina->id,
+                            'nome' => $item->manualLivro->disciplina->nome,
+                        ] : null,
+                    ]);
+                }
+
+                if ($item->cadernoLivro) {
+                    $items->push([
+                        'id' => $item->cadernoLivro->id,
+                        'titulo' => $item->cadernoLivro->titulo ?? 'Sem título',
+                        'isbn' => $item->cadernoLivro->isbn ?? '',
+                        'preco' => $item->cadernoLivro->preco ?? 0,
+                        'year' => $item->cadernoLivro->anoEscolar->name ?? 'N/D',
+                        'tipo' => $item->cadernoLivro->tipo,
+                        'disciplina_id' => $item->cadernoLivro->disciplina_id,
+                        'ano_escolar_id' => $item->cadernoLivro->ano_escolar_id,
+                        'updated_at' => $item->cadernoLivro->updated_at?->toISOString(),
+                        'disciplina' => $item->cadernoLivro->disciplina ? [
+                            'id' => $item->cadernoLivro->disciplina->id,
+                            'nome' => $item->cadernoLivro->disciplina->nome,
+                        ] : null,
+                    ]);
+                }
+            });
+
+            return response()->json($items->values());
+        }
+
+        return response()->json([]);
     }
-    return response()->json([]);
-}
 
 public function store(Request $request)
 {
@@ -93,8 +125,20 @@ public function store(Request $request)
         'escola_id' => 'required|exists:escolas,id',
         'ano_letivo_id' => 'required|exists:anos_letivos,id',
         'ano_escolar_id' => 'required|exists:anos_escolares,id',
-        'items' => 'array'
+        'items' => 'array',
+        'precos' => 'array',
+        'precos.*.id' => 'required|exists:livros,id',
+        'precos.*.preco' => 'nullable|numeric|min:0',
     ]);
+
+    // Atualizar preços dos livros
+    if ($request->precos) {
+        foreach ($request->precos as $item) {
+            if (isset($item['id']) && isset($item['preco'])) {
+                Livro::where('id', $item['id'])->update(['preco' => $item['preco']]);
+            }
+        }
+    }
 
     $lista = ListaLivro::updateOrCreate([
         'escola_id' => $request->escola_id,
