@@ -86,8 +86,8 @@ export default function Sidebar({ user }) {
     },
     {
       label: "Gerir Listas de Livros",
-      href: route('books.index'), 
-      active: isActive(currentPath, "/books.index"),
+      href: route('manuais.index'),
+      active: isActive(currentPath, "/manuais-list"),
       icon: <FaListAlt className="w-5 h-5" />,
       disabled: false,
     },

@@ -52,7 +52,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     useEffect(() => {
         if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
             setCurrentList([]);
-            axios.get(route('api.lista.books'), {
+            axios.get(route('api.lista.manuais'), {
                 params: {
                     escola_id: data.escola_id,
                     ano_letivo_id: data.ano_letivo_id,
@@ -137,7 +137,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             items: itemsIds
         }));
 
-        post(route('book-lists.store'), {
+        post(route('manuais-lists.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 setShowSuccessModal(true);

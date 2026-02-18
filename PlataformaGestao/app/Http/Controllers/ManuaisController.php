@@ -13,7 +13,7 @@ use App\Models\ListaLivro;
 use App\Models\Disciplina;
 use Illuminate\Http\Request;
 
-class LivroController extends Controller
+class ManuaisController extends Controller
 {
     public function index(Request $request)
 {
@@ -44,7 +44,7 @@ class LivroController extends Controller
             ->first();
 
         // Renderizar a página com os dados iniciais dos filtros
-        return Inertia::render('Books/Index', [
+        return Inertia::render('Manuais/Index', [
             'concelhos'         => Concelho::all(['id', 'nome']),
             'escolas'           => Escola::all(['id', 'nome', 'concelho_id']),
             'anos_letivos'      => AnoLetivo::all(['id', 'nome']),

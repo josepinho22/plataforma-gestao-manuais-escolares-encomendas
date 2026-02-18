@@ -62,7 +62,7 @@ export default function Dashboard({ auth }) {
 
                 {/* 5. CARDS DE GESTÃO */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FeatureCard title="Listas de Manuais" desc="Gerir listas de livros por escola e ano letivo" icon={<FaBook className="text-blue-500" />} href={route("books.index")} />
+                    <FeatureCard title="Listas de Manuais" desc="Gerir listas de livros por escola e ano letivo" icon={<FaBook className="text-blue-500" />} href={route("manuais.index")} />
                     <FeatureCard title="Encomendas" desc="Ver e gerir todas as encomendas de alunos" icon={<FaPlus className="text-green-500" />} href={route("orders.clientes.index")} />
                     <FeatureCard title="Catálogo" desc="Gerir livros, preços e editoras" icon={<FaThLarge className="text-purple-500" />} href={route("catalogo.livros.index")}/>
                 </div>

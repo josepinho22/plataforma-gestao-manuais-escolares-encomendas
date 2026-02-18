@@ -6,7 +6,7 @@ use App\Http\Controllers\EncomendasEditoraController;
 use App\Http\Controllers\CatalogoLivrosController;
 use App\Http\Controllers\EscolasController;
 use App\Http\Controllers\AlunosController;
-use App\Http\Controllers\LivroController;
+use App\Http\Controllers\ManuaisController;
 use App\Http\Controllers\StockController;
 
 use Illuminate\Foundation\Application;
@@ -111,9 +111,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Catálogo (Nome exato exigido pela Sidebar)
     //Route::get('/catalogo/livros', [LivroController::class, 'index'])->name('catalogo.livros.index');
-    Route::get('/books-list', [LivroController::class, 'index'])->name('books.index');
-    Route::get('/api/get-lista-books', [LivroController::class, 'getListaBooks'])->name('api.lista.books');
-    Route::post('/catalogo/livros', [LivroController::class, 'store'])->name('book-lists.store');
+    Route::get('/manuais-list', [ManuaisController::class, 'index'])->name('manuais.index');
+    Route::get('/api/get-lista-manuais', [ManuaisController::class, 'getListaBooks'])->name('api.lista.manuais');
+    Route::post('/catalogo/livros', [ManuaisController::class, 'store'])->name('manuais-lists.store');
     });
 
 
