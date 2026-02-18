@@ -9,7 +9,7 @@ function getUpdateStatus(updatedAt) {
     if (updatedYear >= currentYear) {
         return { bg: 'bg-green-50 border-green-200', icon: 'text-green-400', title: `Atualizado em ${updatedYear}` };
     } else if (updatedYear === currentYear - 1) {
-        return { bg: 'bg-orange-50 border-orange-200', icon: 'text-orange-400', title: `Atualizado em ${updatedYear}` };
+        return { bg: 'bg-orange-50 border-yellow-200', icon: 'text-orange-400', title: `Atualizado em ${updatedYear}` };
     }
     return { bg: 'bg-red-100 border-red-400', icon: 'text-red-600', title: `Atualizado em ${updatedYear} (desatualizado)` };
 }

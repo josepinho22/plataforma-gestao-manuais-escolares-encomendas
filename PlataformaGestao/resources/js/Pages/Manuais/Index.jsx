@@ -108,10 +108,27 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             }
 
             setCurrentList(prev => {
-                const novosItens = itensParaAdicionar.filter(
-                    novoItem => !prev.find(i => i.id === novoItem.id)
-                );
-                return [...prev, ...novosItens];
+                let listaAtualizada = [...prev];
+
+                itensParaAdicionar.forEach(novoItem => {
+                    // Verifica se já existe na lista (mesmo id)
+                    if (listaAtualizada.find(i => i.id === novoItem.id)) return;
+
+                    // Verifica se já existe um livro da mesma disciplina e tipo
+                    const indexExistente = listaAtualizada.findIndex(
+                        i => i.disciplina_id === novoItem.disciplina_id && i.tipo === novoItem.tipo
+                    );
+
+                    if (indexExistente !== -1) {
+                        // Substitui o livro existente pelo novo
+                        listaAtualizada[indexExistente] = novoItem;
+                    } else {
+                        // Adiciona normalmente
+                        listaAtualizada.push(novoItem);
+                    }
+                });
+
+                return listaAtualizada;
             });
         }
     };
