@@ -16,41 +16,45 @@ export default function StockIndex({
     anosEscolares,
 }) {
     const [formData, setFormData] = useState({
-        titulo: filters?.titulo ?? "",
-        isbn: filters?.isbn ?? "",
+        q: filters?.q ?? "",
         disciplina_id: filters?.disciplina_id ?? "",
         editora_id: filters?.editora_id ?? "",
         ano_escolar_id: filters?.ano_escolar_id ?? "",
     });
+    const filterTimerRef = useRef(null);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get("/stock", formData, {
+    const handleQChange = (value) => {
+        const next = { ...formData, q: value };
+        setFormData(next);
+        clearTimeout(filterTimerRef.current);
+        filterTimerRef.current = setTimeout(() => {
+            router.get("/stock", next, {
+                preserveState: true,
+                preserveScroll: true,
+                only: ["items", "totalInStock", "filters"],
+            });
+        }, 300);
+    };
+
+    const handleSelectChange = (field, value) => {
+        const next = { ...formData, [field]: value };
+        setFormData(next);
+        router.get("/stock", next, {
             preserveState: true,
             preserveScroll: true,
+            only: ["items", "totalInStock", "filters"],
         });
     };
 
     const handleClear = () => {
-        setFormData({
-            titulo: "",
-            isbn: "",
-            disciplina_id: "",
-            editora_id: "",
-            ano_escolar_id: "",
+        clearTimeout(filterTimerRef.current);
+        const empty = { q: "", disciplina_id: "", editora_id: "", ano_escolar_id: "" };
+        setFormData(empty);
+        router.get("/stock", {}, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ["items", "totalInStock", "filters"],
         });
-        router.get(
-            "/stock",
-            {},
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
-    };
-
-    const handleInputChange = (field, value) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     // Adjust modal state
@@ -174,41 +178,19 @@ export default function StockIndex({
 
                 {/* Filters */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <form onSubmit={handleSearch} className="space-y-4">
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
+                            <div className="md:col-span-2 lg:col-span-1">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Título
+                                    Pesquisar (Título / ISBN)
                                 </label>
                                 <TextInput
                                     type="text"
-                                    value={formData.titulo}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "titulo",
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Pesquisar por título"
+                                    value={formData.q}
+                                    onChange={(e) => handleQChange(e.target.value)}
+                                    placeholder="Título ou ISBN..."
                                     className="w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    ISBN
-                                </label>
-                                <TextInput
-                                    type="text"
-                                    value={formData.isbn}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "isbn",
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Pesquisar por ISBN"
-                                    className="w-full"
+                                    autoComplete="off"
                                 />
                             </div>
 
@@ -218,26 +200,15 @@ export default function StockIndex({
                                 </label>
                                 <select
                                     value={formData.disciplina_id}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "disciplina_id",
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => handleSelectChange("disciplina_id", e.target.value)}
                                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 >
-                                    <option value="">
-                                        Todas as disciplinas
-                                    </option>
-                                    {disciplinas &&
-                                        disciplinas.map((disciplina) => (
-                                            <option
-                                                key={disciplina.id}
-                                                value={disciplina.id}
-                                            >
-                                                {disciplina.nome}
-                                            </option>
-                                        ))}
+                                    <option value="">Todas as disciplinas</option>
+                                    {disciplinas && disciplinas.map((disciplina) => (
+                                        <option key={disciplina.id} value={disciplina.id}>
+                                            {disciplina.nome}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -247,27 +218,15 @@ export default function StockIndex({
                                 </label>
                                 <select
                                     value={formData.editora_id}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "editora_id",
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => handleSelectChange("editora_id", e.target.value)}
                                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 >
                                     <option value="">Todas as editoras</option>
-                                    {editoras &&
-                                        editoras.map((editora) => (
-                                            <option
-                                                key={editora.id}
-                                                value={editora.id}
-                                            >
-                                                {editora.nome}{" "}
-                                                {editora.codigo
-                                                    ? `(${editora.codigo})`
-                                                    : ""}
-                                            </option>
-                                        ))}
+                                    {editoras && editoras.map((editora) => (
+                                        <option key={editora.id} value={editora.id}>
+                                            {editora.nome}{editora.codigo ? ` (${editora.codigo})` : ""}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -277,37 +236,25 @@ export default function StockIndex({
                                 </label>
                                 <select
                                     value={formData.ano_escolar_id}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            "ano_escolar_id",
-                                            e.target.value,
-                                        )
-                                    }
+                                    onChange={(e) => handleSelectChange("ano_escolar_id", e.target.value)}
                                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 >
                                     <option value="">Todos os anos</option>
-                                    {anosEscolares &&
-                                        anosEscolares.map((ano) => (
-                                            <option key={ano.id} value={ano.id}>
-                                                {ano.name}
-                                            </option>
-                                        ))}
+                                    {anosEscolares && anosEscolares.map((ano) => (
+                                        <option key={ano.id} value={ano.id}>
+                                            {ano.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
 
-                        <div className="flex gap-2">
-                            <PrimaryButton type="submit">
-                                Pesquisar
-                            </PrimaryButton>
-                            <SecondaryButton
-                                type="button"
-                                onClick={handleClear}
-                            >
+                        <div className="flex justify-end">
+                            <SecondaryButton type="button" onClick={handleClear}>
                                 Limpar
                             </SecondaryButton>
                         </div>
-                    </form>
+                    </div>
                 </div>
 
                 {/* Add book to stock button */}

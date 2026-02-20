@@ -62,12 +62,12 @@ class StockController extends Controller
         });
 
         // Filters
-        if ($request->filled('titulo')) {
-            $query->where('livros.titulo', 'like', '%' . $request->titulo . '%');
-        }
-
-        if ($request->filled('isbn')) {
-            $query->where('livros.isbn', 'like', '%' . $request->isbn . '%');
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($wq) use ($q) {
+                $wq->where('livros.titulo', 'like', '%' . $q . '%')
+                   ->orWhere('livros.isbn', 'like', '%' . $q . '%');
+            });
         }
 
         if ($request->filled('disciplina_id')) {
@@ -99,7 +99,7 @@ class StockController extends Controller
         return Inertia::render('Stock/Index', [
             'items' => $items,
             'totalInStock' => $totalInStock,
-            'filters' => $request->only(['titulo', 'isbn', 'disciplina_id', 'editora_id', 'ano_escolar_id']),
+            'filters' => $request->only(['q', 'disciplina_id', 'editora_id', 'ano_escolar_id']),
             'disciplinas' => $disciplinas,
             'editoras' => $editoras,
             'anosEscolares' => $anosEscolares,
