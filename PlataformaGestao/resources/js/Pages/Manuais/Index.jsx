@@ -252,7 +252,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
                             <Droppable droppableId="catalog">
                                 {(provided) => (
-                                    <div {...provided.droppableProps} ref={provided.innerRef} className="card-3d p-4 rounded-2xl h-[500px] overflow-y-auto space-y-2 custom-scrollbar">
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white/80 p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2 custom-scrollbar">
                                         {filteredCatalog.length > 0 ? (
                                             filteredCatalog.map((item, index) => (
                                                 <BookCard
