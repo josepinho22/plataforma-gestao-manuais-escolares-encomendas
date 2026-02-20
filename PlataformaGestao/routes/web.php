@@ -8,6 +8,7 @@ use App\Http\Controllers\EscolasController;
 use App\Http\Controllers\AlunosController;
 use App\Http\Controllers\ManuaisController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\LivroController;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +97,10 @@ Route::put('/alunos/{aluno}', [AlunosController::class, 'update'])->name('alunos
 // Rotas para stock
 Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+Route::post('/stock/add', [StockController::class, 'add'])->name('stock.add');
+
+// Livros - search endpoint (AJAX)
+Route::get('/livros/search', [LivroController::class, 'search'])->name('livros.search');
 
 
 Route::middleware('auth')->group(function () {

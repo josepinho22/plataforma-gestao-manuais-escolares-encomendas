@@ -149,4 +149,37 @@ class StockController extends Controller
 
         return back();
     }
+
+    public function add(Request $request)
+    {
+        $request->validate([
+            'livro_id' => 'required|exists:livros,id',
+            'quantidade' => 'required|integer|min:1',
+        ]);
+
+        $livroId = $request->livro_id;
+        $quantidade = $request->quantidade;
+
+        DB::transaction(function () use ($livroId, $quantidade) {
+            $stock = Stock::where('livro_id', $livroId)->lockForUpdate()->first();
+
+            if ($stock) {
+                $stock->quantidade += $quantidade;
+                $stock->save();
+            } else {
+                Stock::create([
+                    'livro_id' => $livroId,
+                    'quantidade' => $quantidade,
+                ]);
+            }
+
+            StockMovimento::create([
+                'livro_id' => $livroId,
+                'tipo' => 1,
+                'quantidade' => $quantidade,
+            ]);
+        });
+
+        return back();
+    }
 }

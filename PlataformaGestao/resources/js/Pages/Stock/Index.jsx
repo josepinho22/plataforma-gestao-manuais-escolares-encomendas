@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import TextInput from "@/Components/TextInput";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
@@ -87,6 +87,65 @@ export default function StockIndex({
         adjustForm.post("/stock/adjust", {
             preserveScroll: true,
             onSuccess: () => closeAdjustModal(),
+        });
+    };
+
+    // ── Add Stock modal ──────────────────────────────────────────────────────
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedLivro, setSelectedLivro] = useState(null);
+    const searchTimerRef = useRef(null);
+
+    const addForm = useForm({
+        livro_id: "",
+        quantidade: "",
+    });
+
+    const openAddModal = () => setShowAddModal(true);
+
+    const closeAddModal = () => {
+        clearTimeout(searchTimerRef.current);
+        setShowAddModal(false);
+        setSearchTerm("");
+        setSearchResults([]);
+        setSelectedLivro(null);
+        addForm.reset();
+        addForm.clearErrors();
+    };
+
+    const handleSearchTermChange = (value) => {
+        setSearchTerm(value);
+        setSelectedLivro(null);
+        addForm.setData("livro_id", "");
+        clearTimeout(searchTimerRef.current);
+
+        if (value.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        searchTimerRef.current = setTimeout(() => {
+            fetch(`/livros/search?q=${encodeURIComponent(value)}`)
+                .then((res) => res.json())
+                .then((data) => setSearchResults(data))
+                .catch(() => setSearchResults([]));
+        }, 300);
+    };
+
+    const selectLivro = (livro) => {
+        setSelectedLivro(livro);
+        addForm.setData("livro_id", livro.id);
+        setSearchResults([]);
+        setSearchTerm("");
+    };
+
+    const submitAdd = (e) => {
+        e.preventDefault();
+        if (!addForm.data.livro_id) return;
+        addForm.post("/stock/add", {
+            preserveScroll: true,
+            onSuccess: () => closeAddModal(),
         });
     };
 
@@ -254,8 +313,9 @@ export default function StockIndex({
                 {/* Add book to stock button */}
                 <div>
                     <button
-                        disabled
-                        className="inline-flex items-center gap-1 rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white opacity-50 cursor-not-allowed"
+                        type="button"
+                        onClick={openAddModal}
+                        className="inline-flex items-center gap-1 rounded-md bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm font-semibold text-white transition"
                     >
                         <span className="text-lg leading-none">+</span>
                         Adicionar Livro ao Stock
@@ -388,6 +448,135 @@ export default function StockIndex({
                     </div>
                 )}
             </div>
+
+            {/* Add Stock Modal */}
+            <Modal show={showAddModal} onClose={closeAddModal} maxWidth="md">
+                <form onSubmit={submitAdd} className="p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Adicionar Livro ao Stock
+                    </h2>
+
+                    <div className="space-y-4">
+                        {/* Search input + autocomplete dropdown */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Pesquisar Livro
+                            </label>
+                            <div className="relative">
+                                <TextInput
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) =>
+                                        handleSearchTermChange(e.target.value)
+                                    }
+                                    placeholder="Título ou ISBN..."
+                                    className="w-full"
+                                    autoComplete="off"
+                                />
+
+                                {searchTerm.length >= 2 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                        {searchResults.length > 0 ? (
+                                            searchResults.map((livro) => (
+                                                <button
+                                                    key={livro.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        selectLivro(livro)
+                                                    }
+                                                    className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none"
+                                                >
+                                                    <span className="font-medium text-gray-900">
+                                                        {livro.titulo}
+                                                    </span>
+                                                    {livro.isbn && (
+                                                        <span className="ml-2 text-xs text-gray-400">
+                                                            {livro.isbn}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-3 text-sm text-gray-500">
+                                                Nenhum livro encontrado.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Selected livro pill */}
+                        {selectedLivro && (
+                            <div className="flex items-center justify-between rounded-md bg-indigo-50 border border-indigo-200 px-3 py-2">
+                                <div>
+                                    <span className="text-sm font-medium text-indigo-800">
+                                        {selectedLivro.titulo}
+                                    </span>
+                                    {selectedLivro.isbn && (
+                                        <span className="ml-2 text-xs text-indigo-500">
+                                            {selectedLivro.isbn}
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedLivro(null);
+                                        addForm.setData("livro_id", "");
+                                    }}
+                                    className="ml-3 text-indigo-400 hover:text-indigo-600 text-xs font-bold"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        <InputError
+                            message={addForm.errors.livro_id}
+                            className="mt-1"
+                        />
+
+                        {/* Quantidade */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Quantidade
+                            </label>
+                            <TextInput
+                                type="number"
+                                min="1"
+                                value={addForm.data.quantidade}
+                                onChange={(e) =>
+                                    addForm.setData(
+                                        "quantidade",
+                                        e.target.value,
+                                    )
+                                }
+                                className="w-full"
+                                placeholder="Quantidade a adicionar"
+                            />
+                            <InputError
+                                message={addForm.errors.quantidade}
+                                className="mt-1"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 mt-6">
+                        <SecondaryButton type="button" onClick={closeAddModal}>
+                            Cancelar
+                        </SecondaryButton>
+                        <PrimaryButton
+                            type="submit"
+                            disabled={
+                                addForm.processing || !addForm.data.livro_id
+                            }
+                        >
+                            {addForm.processing ? "A guardar..." : "Confirmar"}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Adjust Stock Modal */}
             <Modal
