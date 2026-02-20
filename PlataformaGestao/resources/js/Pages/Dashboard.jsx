@@ -22,49 +22,51 @@ export default function Dashboard({ auth }) {
         <AuthenticatedLayout user={auth.user}>
             <Head title="Dashboard" />
 
-            <div className="space-y-10">
+            <div className="-m-8 min-h-screen bg-gray-50/80 font-sans flex flex-col">
+                <div className="max-w-7xl mx-auto w-full px-5 sm:px-6 lg:px-8 py-8 space-y-8">
 
-                {/* 1. CABEÇALHO */}
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-                    <p className="text-sm text-gray-500">Bem-vindo ao PAPELOCK - Gestão de Livros Escolares</p>
-                </div>
+                    {/* 1. CABEÇALHO */}
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h1>
+                        <p className="text-sm text-gray-500/80 mt-1 font-medium">Bem-vindo ao PAPELOCK - Gestão de Livros Escolares</p>
+                    </div>
 
-                {/* 2. ACÇÕES RÁPIDAS */}
-                <section>
-                    <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-widest">Ações Rápidas</h3>
+                    {/* 2. ACÇÕES RÁPIDAS */}
+                    <section>
+                        <h3 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest">Ações Rápidas</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <QuickAction icon={<FaPlus />} label="Nova Encomenda" variant="dark" href={route("orders.create")} />
+                            <QuickAction icon={<FaSearch />} label="Consultar Encomendas" href={route("orders.clientes.index")} />
+                        </div>
+                    </section>
+
+                    {/* 3. ENCOMENDAS - CLIENTES */}
+                    <section className="space-y-4">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Encomendas - Clientes</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {customerStats.map((stat, i) => (
+                                <StatCard key={i} stat={stat} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* 4. ENCOMENDAS - EDITORA */}
+                    <section className="space-y-4">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Encomendas - Editora</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {publisherStats.map((stat, i) => (
+                                <StatCard key={i} stat={stat} />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* 5. CARDS DE GESTÃO */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <QuickAction icon={<FaPlus />} label="Nova Encomenda" variant="dark" href={route("orders.create")} />
-                        <QuickAction icon={<FaSearch />} label="Consultar Encomendas" href={route("orders.clientes.index")} />
-                        <QuickAction icon={<FaFileAlt />} label="Ver Relatórios" />
+                        <FeatureCard title="Listas de Manuais" desc="Gerir listas de livros por escola e ano letivo" icon={<FaBook className="text-blue-500" />} href={route("manuais.index")} />
+                        <FeatureCard title="Encomendas" desc="Ver e gerir todas as encomendas de alunos" icon={<FaPlus className="text-indigo-500" />} href={route("orders.clientes.index")} />
+                        <FeatureCard title="Catálogo" desc="Gerir livros, preços e editoras" icon={<FaThLarge className="text-purple-500" />} href={route("catalogo.livros.index")}/>
                     </div>
-                </section>
 
-                {/* 3. ENCOMENDAS - CLIENTES */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Encomendas - Clientes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {customerStats.map((stat, i) => (
-                            <StatCard key={i} stat={stat} />
-                        ))}
-                    </div>
-                </section>
-
-                {/* 4. ENCOMENDAS - EDITORA */}
-                <section className="space-y-4">
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest">Encomendas - Editora</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {publisherStats.map((stat, i) => (
-                            <StatCard key={i} stat={stat} />
-                        ))}
-                    </div>
-                </section>
-
-                {/* 5. CARDS DE GESTÃO */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FeatureCard title="Listas de Manuais" desc="Gerir listas de livros por escola e ano letivo" icon={<FaBook className="text-blue-500" />} href={route("manuais.index")} />
-                    <FeatureCard title="Encomendas" desc="Ver e gerir todas as encomendas de alunos" icon={<FaPlus className="text-green-500" />} href={route("orders.clientes.index")} />
-                    <FeatureCard title="Catálogo" desc="Gerir livros, preços e editoras" icon={<FaThLarge className="text-purple-500" />} href={route("catalogo.livros.index")}/>
                 </div>
             </div>
         </AuthenticatedLayout>
@@ -76,12 +78,12 @@ export default function Dashboard({ auth }) {
 function QuickAction({ icon, label, variant = 'light', href }) {
     const isDark = variant === 'dark';
     const themeClasses = isDark
-        ? 'bg-[#0a0a1a] text-white border-transparent'
-        : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50';
+        ? 'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 border-transparent'
+        : 'card-3d text-gray-700 hover:shadow-md';
 
     if (href) {
         return (
-            <Link href={href} className={`relative overflow-hidden flex flex-col items-center justify-center p-8 rounded-lg border shadow-sm transition-all group ${themeClasses}`}>
+            <Link href={href} className={`relative overflow-hidden flex flex-col items-center justify-center p-8 rounded-2xl border transition-all duration-200 active:scale-[0.97] group ${themeClasses}`}>
                 <div className="relative z-10 flex flex-col items-center">
                     <span className="text-2xl mb-3">{icon}</span>
                     <span className="text-xs font-bold uppercase tracking-tight">{label}</span>
@@ -91,7 +93,7 @@ function QuickAction({ icon, label, variant = 'light', href }) {
     }
 
     return (
-        <button className={`relative overflow-hidden flex flex-col items-center justify-center p-8 rounded-lg border shadow-sm transition-all group ${themeClasses}`}>
+        <button className={`relative overflow-hidden flex flex-col items-center justify-center p-8 rounded-2xl border transition-all duration-200 active:scale-[0.97] group ${themeClasses}`}>
             <div className="relative z-10 flex flex-col items-center">
                 <span className="text-2xl mb-3">{icon}</span>
                 <span className="text-xs font-bold uppercase tracking-tight">{label}</span>
@@ -102,7 +104,7 @@ function QuickAction({ icon, label, variant = 'light', href }) {
 
 function StatCard({ stat }) {
     return (
-        <div className={`relative overflow-hidden bg-white p-6 rounded-xl border-2 ${stat.color} flex flex-col items-start gap-4 shadow-sm`}>
+        <div className={`card-3d animate-card-in relative overflow-hidden p-6 rounded-2xl border-l-4 ${stat.color} flex flex-col items-start gap-4`}>
             {/* Ícone Decorativo no Fundo */}
             <div className="absolute -right-4 -bottom-4 opacity-10 text-8xl transform rotate-12">
                 {stat.icon}
@@ -118,7 +120,7 @@ function StatCard({ stat }) {
 
                 <Link
                     href={stat.href || "#"}
-                    className={`mt-4 w-full py-2 px-3 rounded-lg text-[10px] font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 transition-opacity ${stat.btnColor}`}
+                    className={`mt-4 w-full py-2 px-3 rounded-xl text-[10px] font-bold text-white flex items-center justify-center gap-2 hover:opacity-90 transition-opacity ${stat.btnColor}`}
                 >
                     Ver Detalhes <FaArrowRight className="w-3 h-3"/>
                 </Link>
@@ -130,9 +132,9 @@ function StatCard({ stat }) {
 function FeatureCard({ title, desc, icon, href }) {
     if (href) {
         return (
-            <Link href={href} className="group bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
+            <Link href={href} className="group card-3d animate-card-in p-6 rounded-2xl hover:shadow-md transition-all duration-200 cursor-pointer">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-gray-50 rounded-lg text-sm group-hover:bg-white transition-colors">{icon}</div>
+                    <div className="p-2 bg-gray-50/80 rounded-xl text-sm group-hover:bg-white transition-colors">{icon}</div>
                     <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
                 </div>
                 <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>
@@ -141,9 +143,9 @@ function FeatureCard({ title, desc, icon, href }) {
     }
 
     return (
-        <div className="group bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer">
+        <div className="group card-3d animate-card-in p-6 rounded-2xl hover:shadow-md transition-all duration-200 cursor-pointer">
             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-gray-50 rounded-lg text-sm group-hover:bg-white transition-colors">{icon}</div>
+                <div className="p-2 bg-gray-50/80 rounded-xl text-sm group-hover:bg-white transition-colors">{icon}</div>
                 <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
             </div>
             <p className="text-[11px] text-gray-400 leading-relaxed">{desc}</p>

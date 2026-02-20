@@ -337,29 +337,27 @@ const handlePrint = (order) => {
 export default function OrdersHistoryTable({ orders, onView, onReceive }) {
   return (
     <div>
-      <h2 className="text-4xl font-black text-gray-900 leading-tight">
-        Histórico de
-        <br />
-        encomendas
+      <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">
+        Histórico de encomendas
       </h2>
 
-      <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="card-3d rounded-3xl overflow-hidden animate-card-in-delay">
         <div className="overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr className="text-left text-gray-600">
-                <th className="px-4 py-3 font-bold">Nº Encomenda</th>
-                <th className="px-4 py-3 font-bold">Editora</th>
-                <th className="px-4 py-3 font-bold">Itens</th>
-                <th className="px-4 py-3 font-bold">Data Pedido</th>
-                <th className="px-4 py-3 font-bold">Entrega Prevista</th>
-                <th className="px-4 py-3 font-bold">Total</th>
-                <th className="px-4 py-3 font-bold">Status</th>
-                <th className="px-4 py-3 font-bold text-right">Ações</th>
+            <thead className="bg-gray-50/50 border-b border-white/40">
+              <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                <th className="px-4 py-3">Nº Encomenda</th>
+                <th className="px-4 py-3">Editora</th>
+                <th className="px-4 py-3">Itens</th>
+                <th className="px-4 py-3">Data Pedido</th>
+                <th className="px-4 py-3">Entrega Prevista</th>
+                <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100/60">
               {(orders || []).length === 0 ? (
                 <tr>
                   <td className="px-4 py-8" colSpan={8}>
@@ -371,18 +369,18 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
                 </tr>
               ) : (
                 (orders || []).map((o) => (
-                  <tr key={o.id} className="hover:bg-gray-50/60">
+                  <tr key={o.id} className="hover:bg-indigo-50/20 transition-colors">
                     <td className="px-4 py-3 font-semibold text-gray-900">
                       {o.number}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-4 py-3 text-gray-600">
                       {o.publisher_name}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-4 py-3 text-gray-600">
                       {(o.lines || []).length} livro(s)
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{o.requested_at}</td>
-                    <td className="px-4 py-3 text-gray-700">{o.expected_at}</td>
+                    <td className="px-4 py-3 text-gray-600">{o.requested_at}</td>
+                    <td className="px-4 py-3 text-gray-600">{o.expected_at}</td>
                     <td className="px-4 py-3 text-gray-900 font-semibold">
                       {formatEUR(o.total)}
                     </td>
@@ -393,7 +391,7 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => onView(o)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs"
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-xs transition-colors"
                         >
                           <FaEye />
                           Ver
@@ -401,8 +399,8 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
 
                         {/* Botão de impressão */}
                         <button
-                          onClick={() => handlePrint(o)} 
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs"
+                          onClick={() => handlePrint(o)}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-xs transition-colors"
                         >
                           <FaPrint />
                           Imprimir
@@ -411,7 +409,7 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
                         {o.status !== "ENTREGUE" ? (
                           <button
                             onClick={() => onReceive(o)}
-                            className="inline-flex items-center justify-center gap-2 min-w-[100px] px-4 py-2 rounded-lg bg-black hover:bg-gray-800 text-white font-bold text-xs"
+                            className="inline-flex items-center justify-center gap-2 min-w-[100px] px-4 py-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 transition-all"
                           >
                             <FaInbox />
                             Receber
@@ -420,7 +418,7 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
                           <button
                             type="button"
                             disabled
-                            className="inline-flex items-center justify-center gap-2 min-w-[100px] px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-bold text-xs cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-2 min-w-[100px] px-4 py-2 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs cursor-not-allowed"
                           >
                             ✓ Recebida
                           </button>

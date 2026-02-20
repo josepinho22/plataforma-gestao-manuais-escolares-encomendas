@@ -8,7 +8,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
   const tipoLabel = isManual ? "Manual" : isCaderno ? "Caderno de Atividades" : "—";
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+    <div className="card-3d rounded-2xl overflow-hidden flex flex-col h-full animate-card-in">
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -17,7 +17,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
             </h3>
 
             <div className="mt-2 flex items-center gap-2">
-              <div className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 text-xs font-bold text-gray-700 bg-white">
+              <div className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 text-xs font-bold text-gray-700 bg-white/60">
                 {tipoLabel}
               </div>
 
@@ -30,7 +30,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
           </div>
 
           <div className="text-right">
-            <div className="text-xs text-gray-500 font-bold uppercase">
+            <div className="text-xs text-gray-400 font-bold uppercase">
               Preço
             </div>
             <div className="text-xl font-black text-gray-900">
@@ -41,19 +41,19 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
 
         <div className="mt-5 space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500">Disciplina:</span>
+            <span className="text-gray-400">Disciplina:</span>
             <span className="font-bold text-gray-900">{livro.disciplina}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Ano:</span>
+            <span className="text-gray-400">Ano:</span>
             <span className="font-bold text-gray-900">{livro.ano}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Editora:</span>
+            <span className="text-gray-400">Editora:</span>
             <span className="font-bold text-gray-900">{livro.editora}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">ISBN:</span>
+            <span className="text-gray-400">ISBN:</span>
             <span className="font-bold text-gray-900">{livro.isbn}</span>
           </div>
         </div>
@@ -63,11 +63,11 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-auto p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-2">
+      <div className="mt-auto p-4 border-t border-white/40 bg-gray-50/30 flex items-center gap-2">
         <button
           type="button"
           onClick={() => onEdit(livro)}
-          className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm"
+          className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-sm transition-colors"
         >
           Editar
         </button>
@@ -75,7 +75,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
         <button
           type="button"
           onClick={() => onToggleActive(livro)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-sm transition-colors"
           title={livro.ativo ? "Tornar inativo" : "Ativar"}
         >
           {livro.ativo ? "✕" : "✓"}
@@ -84,7 +84,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
         <button
           type="button"
           onClick={() => onDelete(livro)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-sm transition-colors"
           title="Eliminar"
         >
           🗑

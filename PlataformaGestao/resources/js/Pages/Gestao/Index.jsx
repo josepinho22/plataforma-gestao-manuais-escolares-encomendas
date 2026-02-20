@@ -10,10 +10,10 @@ function TabButton({ active, children, onClick, icon }) {
       type="button"
       onClick={onClick}
       className={
-        "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black border " +
+        "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 " +
         (active
-          ? "bg-black text-white border-black"
-          : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50")
+          ? "bg-gradient-to-b from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 border-transparent"
+          : "card-3d text-gray-700 hover:shadow-md border border-white/40")
       }
     >
       {icon}
@@ -27,7 +27,7 @@ function RowActions({ onEdit, onDelete }) {
     <div className="flex items-center justify-end gap-2">
       <button
         onClick={onEdit}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-xs transition-colors"
       >
         <FaPen />
         Editar
@@ -35,7 +35,7 @@ function RowActions({ onEdit, onDelete }) {
 
       <button
         onClick={onDelete}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs"
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-xs transition-colors"
       >
         <FaTrash />
         Eliminar
@@ -72,7 +72,7 @@ function NameModal({ open, onClose, title, initialName = "", onSubmit, loading }
             required
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
+            className="glass-input w-full rounded-xl px-4 py-3 text-sm font-semibold text-gray-800"
             placeholder="Ex: Lisboa"
           />
         </div>
@@ -81,14 +81,14 @@ function NameModal({ open, onClose, title, initialName = "", onSubmit, loading }
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-black"
+            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-black text-sm"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white font-black"
+            className="px-5 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all disabled:opacity-50"
           >
             Guardar
           </button>
@@ -110,7 +110,7 @@ function ConfirmDeleteModal({ open, onClose, title, subtitle, onConfirm, loading
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-black"
+            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-black text-sm"
           >
             Cancelar
           </button>
@@ -118,7 +118,7 @@ function ConfirmDeleteModal({ open, onClose, title, subtitle, onConfirm, loading
             type="button"
             disabled={loading}
             onClick={onConfirm}
-            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black"
+            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-sm"
           >
             Apagar
           </button>
@@ -208,144 +208,149 @@ export default function Index({ auth, concelhos, editoras, initial }) {
     <AuthenticatedLayout user={auth.user}>
       <Head title="Gestão" />
 
-      <div className="space-y-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">Gestão</h1>
-            <p className="text-sm text-gray-500">Gerir concelhos e editoras.</p>
+      <div className="-m-8 min-h-screen bg-gray-50/80 font-sans flex flex-col">
+        <div className="max-w-7xl mx-auto w-full px-5 sm:px-6 lg:px-8 py-8 space-y-6">
+
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Gestão</h1>
+              <p className="text-sm text-gray-500/80 mt-1 font-medium">Gerir concelhos e editoras.</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <TabButton
+                active={tab === "CONCELHOS"}
+                onClick={() => setTab("CONCELHOS")}
+                icon={<FaMapMarkerAlt />}
+              >
+                Concelhos
+              </TabButton>
+              <TabButton
+                active={tab === "EDITORAS"}
+                onClick={() => setTab("EDITORAS")}
+                icon={<FaBuilding />}
+              >
+                Editoras
+              </TabButton>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <TabButton
-              active={tab === "CONCELHOS"}
-              onClick={() => setTab("CONCELHOS")}
-              icon={<FaMapMarkerAlt />}
-            >
-              Concelhos
-            </TabButton>
-            <TabButton
-              active={tab === "EDITORAS"}
-              onClick={() => setTab("EDITORAS")}
-              icon={<FaBuilding />}
-            >
-              Editoras
-            </TabButton>
-          </div>
+          {flash?.success && (
+            <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-green-800 text-sm font-semibold">
+              {flash.success}
+            </div>
+          )}
+
+          {/* ---------------- CONCELHOS ---------------- */}
+          {tab === "CONCELHOS" && (
+            <div className="space-y-4">
+              <div className="card-3d rounded-3xl p-5 flex flex-col md:flex-row gap-3 md:items-center md:justify-between animate-card-in">
+                <input
+                  value={searchConcelhos}
+                  onChange={(e) => setSearchConcelhos(e.target.value)}
+                  placeholder="Pesquisar concelho..."
+                  className="glass-input w-full md:max-w-md rounded-xl px-4 py-3 text-sm font-semibold text-gray-800"
+                />
+
+                <button
+                  onClick={() => setNewConcelhoOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-200 active:scale-[0.97] whitespace-nowrap"
+                >
+                  <FaPlus /> Novo Concelho
+                </button>
+              </div>
+
+              <div className="card-3d rounded-3xl overflow-hidden animate-card-in-delay">
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50/50 border-b border-white/40">
+                      <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                        <th className="px-4 py-3">Nome</th>
+                        <th className="px-4 py-3 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100/60">
+                      {(concelhosList || []).map((c) => (
+                        <tr key={c.id} className="hover:bg-indigo-50/20 transition-colors">
+                          <td className="px-4 py-3 font-semibold text-gray-900">{c.nome}</td>
+                          <td className="px-4 py-3">
+                            <RowActions
+                              onEdit={() => setEditConcelho(c)}
+                              onDelete={() => setDeleteConcelho(c)}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                      {(concelhosList || []).length === 0 && (
+                        <tr>
+                          <td colSpan={2} className="px-4 py-10 text-center text-sm text-gray-400">
+                            Sem concelhos.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- EDITORAS ---------------- */}
+          {tab === "EDITORAS" && (
+            <div className="space-y-4">
+              <div className="card-3d rounded-3xl p-5 flex flex-col md:flex-row gap-3 md:items-center md:justify-between animate-card-in">
+                <input
+                  value={searchEditoras}
+                  onChange={(e) => setSearchEditoras(e.target.value)}
+                  placeholder="Pesquisar editora..."
+                  className="glass-input w-full md:max-w-md rounded-xl px-4 py-3 text-sm font-semibold text-gray-800"
+                />
+
+                <button
+                  onClick={() => setNewEditoraOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-200 active:scale-[0.97] whitespace-nowrap"
+                >
+                  <FaPlus /> Nova Editora
+                </button>
+              </div>
+
+              <div className="card-3d rounded-3xl overflow-hidden animate-card-in-delay">
+                <div className="overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50/50 border-b border-white/40">
+                      <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                        <th className="px-4 py-3">Nome</th>
+                        <th className="px-4 py-3 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100/60">
+                      {(editorasList || []).map((e) => (
+                        <tr key={e.id} className="hover:bg-indigo-50/20 transition-colors">
+                          <td className="px-4 py-3 font-semibold text-gray-900">{e.nome}</td>
+                          <td className="px-4 py-3">
+                            <RowActions
+                              onEdit={() => setEditEditora(e)}
+                              onDelete={() => setDeleteEditora(e)}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                      {(editorasList || []).length === 0 && (
+                        <tr>
+                          <td colSpan={2} className="px-4 py-10 text-center text-sm text-gray-400">
+                            Sem editoras.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
-
-        {flash?.success && (
-          <div className="p-4 rounded-xl border border-green-200 bg-green-50 text-green-800 text-sm font-semibold">
-            {flash.success}
-          </div>
-        )}
-
-        {/* ---------------- CONCELHOS ---------------- */}
-        {tab === "CONCELHOS" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-              <input
-                value={searchConcelhos}
-                onChange={(e) => setSearchConcelhos(e.target.value)}
-                placeholder="Pesquisar concelho..."
-                className="w-full md:max-w-md bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
-              />
-
-              <button
-                onClick={() => setNewConcelhoOpen(true)}
-                className="inline-flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 px-4 py-3 rounded-xl text-sm font-black"
-              >
-                <FaPlus /> Novo Concelho
-              </button>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr className="text-left text-gray-600">
-                      <th className="px-4 py-3 font-bold">Nome</th>
-                      <th className="px-4 py-3 font-bold text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {(concelhosList || []).map((c) => (
-                      <tr key={c.id} className="hover:bg-gray-50/60">
-                        <td className="px-4 py-3 font-semibold text-gray-900">{c.nome}</td>
-                        <td className="px-4 py-3">
-                          <RowActions
-                            onEdit={() => setEditConcelho(c)}
-                            onDelete={() => setDeleteConcelho(c)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                    {(concelhosList || []).length === 0 && (
-                      <tr>
-                        <td colSpan={2} className="px-4 py-10 text-center text-sm text-gray-500">
-                          Sem concelhos.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ---------------- EDITORAS ---------------- */}
-        {tab === "EDITORAS" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-              <input
-                value={searchEditoras}
-                onChange={(e) => setSearchEditoras(e.target.value)}
-                placeholder="Pesquisar editora..."
-                className="w-full md:max-w-md bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
-              />
-
-              <button
-                onClick={() => setNewEditoraOpen(true)}
-                className="inline-flex items-center justify-center gap-2 bg-black text-white hover:bg-gray-800 px-4 py-3 rounded-xl text-sm font-black"
-              >
-                <FaPlus /> Nova Editora
-              </button>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr className="text-left text-gray-600">
-                      <th className="px-4 py-3 font-bold">Nome</th>
-                      <th className="px-4 py-3 font-bold text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {(editorasList || []).map((e) => (
-                      <tr key={e.id} className="hover:bg-gray-50/60">
-                        <td className="px-4 py-3 font-semibold text-gray-900">{e.nome}</td>
-                        <td className="px-4 py-3">
-                          <RowActions
-                            onEdit={() => setEditEditora(e)}
-                            onDelete={() => setDeleteEditora(e)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                    {(editorasList || []).length === 0 && (
-                      <tr>
-                        <td colSpan={2} className="px-4 py-10 text-center text-sm text-gray-500">
-                          Sem editoras.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* -------- MODAIS CONCELHOS -------- */}

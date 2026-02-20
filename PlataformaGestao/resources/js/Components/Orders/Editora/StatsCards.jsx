@@ -3,9 +3,9 @@ import { FaCheckCircle, FaTruck, FaClipboardList, FaBoxOpen } from "react-icons/
 
 function StatCard({ label, value, icon, badgeColor }) {
   return (
-    <div className="p-5 rounded-2xl shadow-sm border border-gray-100 bg-white flex items-center justify-between">
+    <div className="card-3d rounded-2xl p-5 flex items-center justify-between animate-card-in">
       <div>
-        <div className="text-xs font-bold uppercase tracking-wide text-gray-500">
+        <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400">
           {label}
         </div>
         <div className="mt-2 text-3xl font-black text-gray-900">

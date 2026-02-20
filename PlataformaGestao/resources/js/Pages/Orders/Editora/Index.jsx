@@ -44,21 +44,22 @@ export default function Index({ auth, stats, toOrderGrouped, orders }) {
     <AuthenticatedLayout user={auth.user}>
       <Head title="Encomendas à Editora" />
 
-      <div className="space-y-8">
-        
+      <div className="-m-8 min-h-screen bg-gray-50/80 font-sans flex flex-col">
+       <div className="max-w-7xl mx-auto w-full px-5 sm:px-6 lg:px-8 py-8 space-y-6">
+
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-black text-gray-900">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Encomendas à Editora
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500/80 font-medium">
             Gerir encomendas de livros às editoras
           </p>
         </div>
 
-        
+
         <StatsCards stats={stats} />
 
-        
+
         <OrdersFilters
           search={search}
           onSearchChange={setSearch}
@@ -66,15 +67,15 @@ export default function Index({ auth, stats, toOrderGrouped, orders }) {
           onStatusChange={setStatusFilter}
         />
 
-        
+
         <ToOrderList
           groups={toOrderGrouped}
-          
+
           onNewOrder={() => {
             setNewOrderPreset(null);
             setIsNewOpen(true);
           }}
-          
+
           onCreateForPublisher={(group) => {
             setNewOrderPreset({
               publisherId: group.publisher?.id,
@@ -85,12 +86,13 @@ export default function Index({ auth, stats, toOrderGrouped, orders }) {
           }}
         />
 
-        
+
         <OrdersHistoryTable
           orders={filteredOrders}
           onView={(o) => setViewOrder(o)}
           onReceive={(o) => setReceiveOrder(o)}
         />
+       </div>
       </div>
 
       

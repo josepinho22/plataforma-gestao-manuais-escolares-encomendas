@@ -153,8 +153,14 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Gerir Listas" />
-            <div className="space-y-6">
-                
+            <div className="-m-8 min-h-screen bg-gray-50/80 font-sans flex flex-col">
+             <div className="max-w-7xl mx-auto w-full px-5 sm:px-6 lg:px-8 py-8 space-y-6">
+
+                <div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Gerir Listas de Manuais</h1>
+                    <p className="text-sm text-gray-500/80 mt-1 font-medium">Selecione a escola e o ano para gerir a lista de manuais.</p>
+                </div>
+
                 <FilterSection
                     data={data}
                     setData={setData}
@@ -181,14 +187,14 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                         
                         {/* LISTA ATUAL */}
                         <div className="space-y-4">
-                            <h3 className="font-bold text-gray-700">Lista Atual ({currentList.length})</h3>
+                            <h3 className="text-sm font-extrabold text-gray-700 tracking-tight">Lista Atual ({currentList.length})</h3>
                             <Droppable droppableId="currentList">
                                 {(provided, snapshot) => (
-                                    <div 
-                                        {...provided.droppableProps} 
-                                        ref={provided.innerRef} 
-                                        className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors 
-                                            ${snapshot.isDraggingOver ? 'bg-blue-50 border-blue-300' : 'bg-gray-50 border-gray-200'}`}
+                                    <div
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                        className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors
+                                            ${snapshot.isDraggingOver ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50/80 border-gray-200'}`}
                                     >
                                         {currentList.length > 0 ? (
                                             currentList.map((item, index) => (
@@ -215,14 +221,14 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                         {/* CATÁLOGO COM FILTROS */}
                         <div className="space-y-4">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <h3 className="font-bold text-gray-700">Catálogo de Livros</h3>
-                                
+                                <h3 className="text-sm font-extrabold text-gray-700 tracking-tight">Catálogo de Livros</h3>
+
                                 <div className="flex flex-1 w-full sm:w-auto gap-2">
                                     {/* Select de Disciplinas */}
                                     <select
                                         value={selectedDisciplina}
                                         onChange={(e) => setSelectedDisciplina(e.target.value)}
-                                        className="w-1/3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black"
+                                        className="w-1/3 glass-input rounded-xl py-2 px-3 text-sm appearance-none"
                                     >
                                         <option value="">Disciplinas</option>
                                         {disciplinasOrdenadas.map(disc => (
@@ -232,13 +238,13 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
                                     {/* Input de Pesquisa */}
                                     <div className="relative flex-1">
-                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Pesquisar..." 
-                                            value={searchTerm} 
-                                            onChange={e => setSearchTerm(e.target.value)} 
-                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-black focus:border-black" 
+                                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                                        <input
+                                            type="text"
+                                            placeholder="Pesquisar..."
+                                            value={searchTerm}
+                                            onChange={e => setSearchTerm(e.target.value)}
+                                            className="glass-input w-full pl-9 pr-4 py-2 rounded-xl text-sm"
                                         />
                                     </div>
                                 </div>
@@ -246,7 +252,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
                             <Droppable droppableId="catalog">
                                 {(provided) => (
-                                    <div {...provided.droppableProps} ref={provided.innerRef} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm h-[500px] overflow-y-auto space-y-2">
+                                    <div {...provided.droppableProps} ref={provided.innerRef} className="card-3d p-4 rounded-2xl h-[500px] overflow-y-auto space-y-2 custom-scrollbar">
                                         {filteredCatalog.length > 0 ? (
                                             filteredCatalog.map((item, index) => (
                                                 <BookCard
@@ -269,6 +275,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
                     </div>
                 </DragDropContext>
+             </div>
             </div>
         </AuthenticatedLayout>
     );

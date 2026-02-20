@@ -3,7 +3,7 @@ export default function Select({ value, onChange, options, placeholder }) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
+      className="w-full glass-input rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 appearance-none"
     >
       <option value="">{placeholder}</option>
       {(options || []).map((o) => (
