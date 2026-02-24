@@ -1,16 +1,6 @@
 # 📚 Plataforma de Gestão de Manuais Escolares e Encomendas
 
-Plataforma web para **gestão de manuais escolares e respetivas encomendas**, desenvolvida em **Laravel**, com foco em organização, escalabilidade e boas práticas de desenvolvimento em equipa.
-
-O projeto encontra-se em fase de desenvolvimento e está a ser construído de forma iterativa, com base em requisitos funcionais que serão definidos progressivamente.
-
----
-
-## 🚧 Estado do Projeto
-
-**Em desenvolvimento**
-
-> O projeto encontra-se ativo, com funcionalidades a serem planeadas e implementadas de forma incremental através do Jira.
+> Plataforma web para **gestão de manuais escolares e respetivas encomendas**, desenvolvida em **Laravel**, com foco em organização, escalabilidade e boas práticas de desenvolvimento em equipa.
 
 ---
 
@@ -80,7 +70,21 @@ A documentação complementar do projeto (análises, requisitos, esquemas, etc.)
 
 Projeto desenvolvido por:
 
-**MTJJ**
+* <a href="https://github.com/josepinho22"><img align="left" src="https://avatars.githubusercontent.com/josepinho22?size=100" width="50"></a>
+**[José Pinho](https://github.com/josepinho22)**
+<br><br/>
+
+* <a href="https://github.com/joaodias23"><img align="left" src="https://avatars.githubusercontent.com/joaodias23?size=100" width="50"></a>
+**[João Dias](https://github.com/joaodias23)**
+<br><br/>
+
+* <a href="https://github.com/MayaraSampaio"><img align="left" src="https://avatars.githubusercontent.com/MayaraSampaio?size=100" width="50"></a>
+**[Mayara Sampaio](https://github.com/MayaraSampaio)**
+<br><br/>
+
+* <a href="https://github.com/thaisliira"><img align="left" src="https://avatars.githubusercontent.com/thaisliira?size=100" width="50"></a>
+**[Thais Lira](https://github.com/thaisliira)**
+<br><br/>
 
 ---
 
