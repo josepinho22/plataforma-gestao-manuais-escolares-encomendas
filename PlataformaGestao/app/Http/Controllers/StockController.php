@@ -44,7 +44,7 @@ class StockController extends Controller
                 'livros.ano_escolar_id',
                 'disciplinas.nome as disciplina_nome',
                 'editoras.nome as editora_nome',
-                'editoras.codigo as editora_codigo',
+                'livros.codigo_interno',
                 DB::raw('COALESCE(stocks.quantidade, 0) as stock_qtd'),
                 DB::raw('COALESCE(necessario_sub.necessario, 0) as necessario'),
             ])
@@ -94,7 +94,7 @@ class StockController extends Controller
 
         // Fetch dropdown options
         $disciplinas = Disciplina::orderBy('nome')->get(['id', 'nome']);
-        $editoras = Editora::orderBy('nome')->get(['id', 'nome', 'codigo']);
+        $editoras = Editora::orderBy('nome')->get(['id', 'nome']);
         $anosEscolares = AnoEscolar::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Stock/Index', [

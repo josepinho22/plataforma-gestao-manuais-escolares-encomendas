@@ -23,6 +23,7 @@ return new class extends Migration
             $table->enum('tipo', ['MANUAL', 'CADERNO_ATIVIDADES']);
             $table->string('titulo');
             $table->string('isbn')->nullable();
+            $table->string('codigo_interno')->nullable();
             $table->decimal('preco');
             $table->boolean('ativo')->default(true);
             $table->timestamp('created_at')->nullable();;

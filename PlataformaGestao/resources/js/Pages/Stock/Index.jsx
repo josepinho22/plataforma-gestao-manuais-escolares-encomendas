@@ -227,7 +227,7 @@ export default function StockIndex({
                                     <option value="">Todas as editoras</option>
                                     {editoras && editoras.map((editora) => (
                                         <option key={editora.id} value={editora.id}>
-                                            {editora.nome}{editora.codigo ? ` (${editora.codigo})` : ""}
+                                            {editora.nome}
                                         </option>
                                     ))}
                                 </select>
@@ -283,7 +283,7 @@ export default function StockIndex({
                                         <th className="px-6 py-3">Título</th>
                                         <th className="px-6 py-3">Editora</th>
                                         <th className="px-6 py-3">ISBN</th>
-                                        <th className="px-6 py-3">Cód. Editora</th>
+                                        <th className="px-6 py-3">Cód. Interno</th>
                                         <th className="px-6 py-3">Stock</th>
                                         <th className="px-6 py-3">Necessário</th>
                                         <th className="px-6 py-3">Ações</th>
@@ -298,7 +298,7 @@ export default function StockIndex({
                                                 <td className="px-6 py-4 font-semibold text-gray-900">{item.titulo}</td>
                                                 <td className="px-6 py-4 text-gray-700">{item.editora_nome || "-"}</td>
                                                 <td className="px-6 py-4 text-gray-700">{item.isbn}</td>
-                                                <td className="px-6 py-4 text-gray-700">{item.editora_codigo || "-"}</td>
+                                                <td className="px-6 py-4 text-gray-700">{item.codigo_interno || "-"}</td>
                                                 <td className="px-6 py-4 font-bold text-indigo-600">{item.stock_qtd}</td>
                                                 <td className="px-6 py-4 font-bold text-amber-600">{item.necessario}</td>
                                                 <td className="px-6 py-4">

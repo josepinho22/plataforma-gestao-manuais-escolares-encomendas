@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('editoras', function (Blueprint $table) {
             $table->id();
             $table->string('nome');
-            $table->string('codigo');
             $table->string('contacto_email')->nullable();
             $table->string('contacto_telefone')->nullable();
             $table->timestamps();

@@ -22,6 +22,7 @@ class Livro extends Model
         'tipo',
         'titulo',
         'isbn',
+        'codigo_interno',
         'preco',
         'ativo',
     ];
