@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Livro;
 use App\Models\Stock;
 use App\Models\StockMovimento;
@@ -50,7 +51,7 @@ class StockController extends Controller
             ])
             ->leftJoin('stocks', function ($join) {
                 $join->on('stocks.livro_id', '=', 'livros.id')
-                     ->whereNull('stocks.deleted_at');
+                    ->whereNull('stocks.deleted_at');
             })
             ->leftJoinSub($necessarioQuery, 'necessario_sub', function ($join) {
                 $join->on('livros.id', '=', 'necessario_sub.livro_id');
@@ -58,16 +59,16 @@ class StockController extends Controller
             ->leftJoin('disciplinas', 'disciplinas.id', '=', 'livros.disciplina_id')
             ->leftJoin('editoras', 'editoras.id', '=', 'livros.editora_id')
             ->where(function ($q) {
-            $q->where('stocks.quantidade', '>', 0)
-            ->orWhere('necessario_sub.necessario', '>', 0);
-        });
+                $q->where('stocks.quantidade', '>', 0)
+                    ->orWhere('necessario_sub.necessario', '>', 0);
+            });
 
         // Filters
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($wq) use ($q) {
                 $wq->where('livros.titulo', 'like', '%' . $q . '%')
-                   ->orWhere('livros.isbn', 'like', '%' . $q . '%');
+                    ->orWhere('livros.isbn', 'like', '%' . $q . '%');
             });
         }
 
