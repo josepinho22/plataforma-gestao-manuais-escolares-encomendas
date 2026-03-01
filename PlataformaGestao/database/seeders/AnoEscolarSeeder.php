@@ -22,6 +22,7 @@ class AnoEscolarSeeder extends Seeder
             '10º Ano',
             '11º Ano',
             '12º Ano',
+            'Outro',
         ];
 
         foreach ($anosEscolares as $name) {

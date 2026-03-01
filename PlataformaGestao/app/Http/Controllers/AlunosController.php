@@ -24,7 +24,7 @@ class AlunosController extends Controller
             });
         }
 
-        $alunos = $query->get()->map(fn ($a) => [
+        $alunos = $query->paginate(20)->withQueryString()->through(fn ($a) => [
             'id' => $a->id,
             'nome' => $a->nome,
             'nif' => $a->nif ?? '',

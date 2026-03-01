@@ -40,7 +40,7 @@ class CatalogoLivrosController extends Controller
         if ($editoraId) $query->where('editora_id', $editoraId);
         if ($tipo) $query->where('tipo', $tipo);
 
-        $livros = $query->get()->map(function ($l) {
+        $livros = $query->paginate(20)->withQueryString()->through(function ($l) {
             return [
                 'id' => $l->id,
 
@@ -100,7 +100,7 @@ class CatalogoLivrosController extends Controller
             'editoras' => Editora::query()->orderBy('nome')->get(['id', 'nome']),
             'tipos' => [
                 ['value' => 'manual', 'label' => 'Manual'],
-                ['value' => 'caderno_atividades', 'label' => 'Caderno de Atividades'],
+                ['value' => 'caderno_atividades', 'label' => 'CA'],
             ],
         ];
 

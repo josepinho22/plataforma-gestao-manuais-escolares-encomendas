@@ -147,9 +147,7 @@ export default function EditBookModal({
               className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
             >
               <option value="manual">Manual</option>
-              <option value="caderno_atividades">
-                Caderno de Atividades
-              </option>
+              <option value="caderno_atividades">CA</option>
             </select>
             {form.errors.tipo && (
               <p className="text-xs text-red-600 mt-1">{form.errors.tipo}</p>

@@ -16,25 +16,48 @@ class EncomendasEditoraController extends Controller
 {
     public function index(Request $request)
     {
-        
+        $search = trim((string) $request->input('search', ''));
+        $statusFrontend = $request->input('status', 'ALL');
+
         $stats = [
             'total' => EncomendaEditora::count(),
             'requested' => EncomendaEditora::where('status', 'SOLICITADO')->count(),
             'partial' => EncomendaEditora::where('status', 'ENTREGA_PARCIAL')->count(),
             'delivered' => EncomendaEditora::where('status', 'ENTREGA_COMPLETA')->count(),
         ];
-        
-        $ordersBase = EncomendaEditora::query()
-            ->with(['editora', 'itens.livro']) 
-            ->orderByDesc('id')
-            ->get();
 
-        $orders = $ordersBase->map(function ($o) {
+        $query = EncomendaEditora::query()
+            ->with(['editora', 'itens.livro'])
+            ->orderByDesc('id');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('editora', fn ($eq) => $eq->where('nome', 'like', "%{$search}%"))
+                  ->orWhere('id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($statusFrontend !== 'ALL') {
+            $dbStatus = match ($statusFrontend) {
+                'SOLICITADO'      => 'SOLICITADO',
+                'ENTREGA_PARCIAL' => 'ENTREGA_PARCIAL',
+                'ENTREGUE'        => 'ENTREGA_COMPLETA',
+                default           => null,
+            };
+            if ($dbStatus) {
+                $query->where('status', $dbStatus);
+            }
+        }
+
+        $ordersBase = $query->paginate(20)->withQueryString();
+
+        $orders = $ordersBase->through(function ($o) {
             $lines = ($o->itens ?? collect())->map(function ($it) {
                 return [
                     'id' => $it->id,
                     'title' => $it->livro?->titulo ?? '—',
                     'isbn' => $it->livro?->isbn ?? '—',
+                    'codigo_interno' => $it->livro?->codigo_interno ?? '',
                     'unit_price' => (float) ($it->livro?->preco ?? 0),
                     'qty_ordered' => (int) ($it->qtd_solicitada ?? 0),
                     'qty_received' => (int) ($it->qtd_recebida_total ?? 0),
@@ -59,9 +82,7 @@ class EncomendasEditoraController extends Controller
                 'notes' => $o->observacoes ?? null,
                 'lines' => $lines,
             ];
-        })->values();
-
-        
+        });
 
         $demandaSub = DB::table('encomenda_livro_aluno_itens')
             ->selectRaw('livro_id, SUM(GREATEST(IFNULL(quantidade,0) - IFNULL(quantidade_entregue,0), 0)) as demanda')
@@ -288,6 +309,101 @@ public function store(Request $request)
             ->with('success', 'Encomenda criada com sucesso.');
     });
 }
+
+    public function export()
+    {
+        $orders = EncomendaEditora::query()
+            ->with(['editora', 'itens.livro'])
+            ->orderByDesc('id')
+            ->get();
+
+        $filename = 'encomendas_editora_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+        ];
+
+        $callback = function () use ($orders) {
+            $out = fopen('php://output', 'w');
+
+            // BOM para Excel abrir em UTF-8 corretamente
+            fwrite($out, "\xEF\xBB\xBF");
+
+            fputcsv($out, [
+                'Nº Encomenda',
+                'Editora',
+                'Status',
+                'Data Pedido',
+                'Entrega Prevista',
+                'Livro',
+                'ISBN',
+                'Qtd Solicitada',
+                'Qtd Recebida',
+                'Preço Unit. (€)',
+                'Subtotal (€)',
+                'Total Encomenda (€)',
+                'Observações',
+            ], ';');
+
+            foreach ($orders as $o) {
+                $number  = 'PO-' . now()->format('Y') . '-' . str_pad((string)$o->id, 3, '0', STR_PAD_LEFT);
+                $editora = $o->editora?->nome ?? '—';
+                $status  = match ($o->status) {
+                    'SOLICITADO'       => 'Solicitado',
+                    'ENTREGA_PARCIAL'  => 'Entrega Parcial',
+                    'ENTREGA_COMPLETA' => 'Entrega Completa',
+                    default            => $o->status,
+                };
+                $dataPedido  = optional($o->data_solicitada)->format('d/m/Y') ?? '—';
+                $dataEntrega = optional($o->data_solicitada)->addDays(7)->format('d/m/Y') ?? '—';
+
+                $totalEncomenda = ($o->itens ?? collect())->sum(fn ($it) =>
+                    (float)($it->livro?->preco ?? 0) * (int)($it->qtd_solicitada ?? 0)
+                );
+                $obs = $o->observacoes ?? '';
+
+                $itens = $o->itens ?? collect();
+
+                if ($itens->isEmpty()) {
+                    fputcsv($out, [
+                        $number, $editora, $status, $dataPedido, $dataEntrega,
+                        '—', '—', 0, 0, '0,00', '0,00',
+                        number_format($totalEncomenda, 2, ',', '.'),
+                        $obs,
+                    ], ';');
+                } else {
+                    foreach ($itens as $it) {
+                        $preco    = (float)($it->livro?->preco ?? 0);
+                        $qtdSol   = (int)($it->qtd_solicitada ?? 0);
+                        $qtdRec   = (int)($it->qtd_recebida_total ?? 0);
+                        $subtotal = $preco * $qtdSol;
+
+                        fputcsv($out, [
+                            $number,
+                            $editora,
+                            $status,
+                            $dataPedido,
+                            $dataEntrega,
+                            $it->livro?->titulo ?? '—',
+                            $it->livro?->isbn   ?? '—',
+                            $qtdSol,
+                            $qtdRec,
+                            number_format($preco, 2, ',', '.'),
+                            number_format($subtotal, 2, ',', '.'),
+                            number_format($totalEncomenda, 2, ',', '.'),
+                            $obs,
+                        ], ';');
+                    }
+                }
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 
     private function mapStatusToFrontend(?string $status): string
 {

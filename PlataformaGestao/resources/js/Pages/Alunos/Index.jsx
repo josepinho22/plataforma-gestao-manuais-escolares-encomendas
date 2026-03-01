@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { FaUserGraduate, FaPlus, FaSearch } from "react-icons/fa";
 
 import NewAlunoModal from "@/Components/Alunos/NewAlunoModal";
 import EditAlunoModal from "@/Components/Alunos/EditAlunoModal";
+import Pagination from "@/Components/Pagination";
 
 function StatCard({ label, value }) {
   return (
@@ -35,7 +36,7 @@ export default function Index({ auth, stats, alunos, initial }) {
     return () => clearTimeout(t);
   }, [search]);
 
-  const rows = useMemo(() => alunos || [], [alunos]);
+  const rows = alunos?.data || [];
 
   return (
     <AuthenticatedLayout user={auth.user}>
@@ -139,6 +140,8 @@ export default function Index({ auth, stats, alunos, initial }) {
                 </tbody>
               </table>
             </div>
+
+            <Pagination items={alunos} params={{ search: search || undefined }} />
           </div>
 
         </div>

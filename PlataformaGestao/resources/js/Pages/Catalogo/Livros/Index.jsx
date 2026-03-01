@@ -9,6 +9,7 @@ import NewBookModal from "@/Components/Catalogo/Livros/NewBookModal";
 import StatCard from "@/Components/Catalogo/Livros/StatCard";
 import Select from "@/Components/Catalogo/Livros/Select";
 import LivroCard from "@/Components/Catalogo/Livros/LivroCard";
+import Pagination from "@/Components/Pagination";
 
 export default function Index({ auth, stats, livros, filters, initial }) {
   const [search, setSearch] = useState(initial.search || "");
@@ -17,56 +18,43 @@ export default function Index({ auth, stats, livros, filters, initial }) {
   const [editora, setEditora] = useState(initial.editora_id || "");
   const [tipo, setTipo] = useState(initial.tipo || "");
 
-
   const [editBook, setEditBook] = useState(null);
   const [deleteBook, setDeleteBook] = useState(null);
   const [newBookOpen, setNewBookOpen] = useState(false);
 
+  const buildParams = (overrides = {}) => ({
+    search: search || undefined,
+    disciplina_id: disciplina || undefined,
+    ano_escolar_id: ano || undefined,
+    editora_id: editora || undefined,
+    tipo: tipo || undefined,
+    ...overrides,
+  });
 
   const refreshList = () => {
-    router.get(
-      route("catalogo.livros.index"),
-      {
-        search: search || undefined,
-        disciplina_id: disciplina || undefined,
-        ano_escolar_id: ano || undefined,
-        editora_id: editora || undefined,
-        tipo: tipo || undefined,
-      },
-      { preserveScroll: true, replace: true, preserveState: false }
-    );
+    router.get(route("catalogo.livros.index"), buildParams(), {
+      preserveScroll: true, replace: true, preserveState: false,
+    });
   };
-
 
   React.useEffect(() => {
     const t = setTimeout(() => {
-      router.get(
-        route("catalogo.livros.index"),
-        {
-          search: search || undefined,
-          disciplina_id: disciplina || undefined,
-          ano_escolar_id: ano || undefined,
-          editora_id: editora || undefined,
-          tipo: tipo || undefined,
-        },
-        { preserveState: true, replace: true, preserveScroll: true }
-      );
+      router.get(route("catalogo.livros.index"), buildParams(), {
+        preserveState: true, replace: true, preserveScroll: true,
+      });
     }, 300);
-
     return () => clearTimeout(t);
   }, [search, disciplina, ano, editora, tipo]);
-
 
   const toggleActive = (book) => {
     router.patch(
       route("catalogo.livros.toggle", book.id),
       {},
-      {
-        preserveScroll: true,
-        onSuccess: () => refreshList(),
-      }
+      { preserveScroll: true, onSuccess: () => refreshList() }
     );
   };
+
+  const livroRows = livros?.data || [];
 
   return (
     <AuthenticatedLayout user={auth.user}>
@@ -118,7 +106,7 @@ export default function Index({ auth, stats, livros, filters, initial }) {
 
           {/* Grid de Livros */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {(livros || []).map((l) => (
+            {livroRows.map((l) => (
               <LivroCard
                 key={l.id}
                 livro={l}
@@ -128,6 +116,8 @@ export default function Index({ auth, stats, livros, filters, initial }) {
               />
             ))}
           </div>
+
+          <Pagination items={livros} params={buildParams()} />
 
         </div>
       </div>

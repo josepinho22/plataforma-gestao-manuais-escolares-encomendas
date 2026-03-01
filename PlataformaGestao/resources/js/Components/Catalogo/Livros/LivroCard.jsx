@@ -5,7 +5,7 @@ export default function LivroCard({ livro, onEdit, onToggleActive, onDelete }) {
 
   const isManual = tipoNorm === "manual";
   const isCaderno = tipoNorm === "caderno_atividades";
-  const tipoLabel = isManual ? "Manual" : isCaderno ? "Caderno de Atividades" : "—";
+  const tipoLabel = isManual ? "Manual" : isCaderno ? "CA" : "—";
 
   return (
     <div className="card-3d rounded-2xl overflow-hidden flex flex-col h-full animate-card-in">

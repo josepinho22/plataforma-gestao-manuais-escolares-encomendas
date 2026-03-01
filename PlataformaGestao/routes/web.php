@@ -58,6 +58,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/encomendas/editora/receber', [EncomendasEditoraController::class, 'receive'])
         ->name('orders.editora.receive');
 
+    Route::get('/encomendas/editora/export', [EncomendasEditoraController::class, 'export'])
+        ->name('orders.editora.export');
+
     // ---------- CATÁLOGO ----------
     Route::get('/catalogo/livros', [CatalogoLivrosController::class, 'index'])
         ->name('catalogo.livros.index');

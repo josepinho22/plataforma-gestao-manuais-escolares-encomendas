@@ -49,6 +49,7 @@ const handlePrint = (order) => {
     .map((item) => {
       const title = esc(item?.title ?? "—");
       const isbn = esc(item?.isbn ?? "—");
+      const codigoInterno = esc(item?.codigo_interno ?? "");
       const qty = toNumber(item?.qty_ordered ?? 0);
       const unit = getUnitPrice(item);
       const sub = unit * qty;
@@ -58,6 +59,7 @@ const handlePrint = (order) => {
           <td class="td">
             <div class="title">${title}</div>
             <div class="muted">ISBN: ${isbn}</div>
+            <div class="muted">Código Editora: ${codigoInterno}</div>
           </td>
           <td class="td center">${qty}</td>
           <td class="td right">${formatEURLocal(unit)}</td>
