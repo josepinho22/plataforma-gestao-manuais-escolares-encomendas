@@ -562,7 +562,7 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
                         onClick={closeModal}
                         className="px-6 py-2 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-[13px] font-bold rounded-xl shadow-sm shadow-indigo-500/25 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
                     >
-                        Fechar
+                        Guardar
                     </button>
                 </div>
             </div>
