@@ -32,18 +32,15 @@ class ManuaisController extends Controller
         'tipo' => $livro->tipo,
         'disciplina_id' => $livro->disciplina_id,
         'ano_escolar_id' => $livro->ano_escolar_id,
-        'updated_at' => $livro->updated_at?->toISOString(),
+        'status_alerta' => $livro->status_alerta,
         'disciplina' => $livro->disciplina ? [
             'id' => $livro->disciplina->id,
             'nome' => $livro->disciplina->nome,
         ] : null,
     ]);
 
-        // Buscar o ano letivo vigente (atual)
-        $anoLetivoVigente = AnoLetivo::whereDate('data_inicio', '<=', now())
-            ->whereDate('data_fim', '>=', now())
-            ->first();
-
+        // Buscar o ano letivo vigente (atual) ou, em alternativa, o último existente
+        $anoLetivoMaisRecente = AnoLetivo::orderByDesc('id')->first();
         // Renderizar a página com os dados iniciais dos filtros
         return Inertia::render('Manuais/Index', [
             'concelhos'         => Concelho::all(['id', 'nome']),
@@ -51,8 +48,7 @@ class ManuaisController extends Controller
             'anos_letivos'      => AnoLetivo::all(['id', 'nome']),
             'anos_escolares'    => AnoEscolar::select('id', 'name as nome')->get(),
             'disciplinas'       => Disciplina::orderBy('nome')->get(['id', 'nome']),
-            'ano_letivo_vigente_id' => $anoLetivoVigente?->id,
-            'catalog'           => $catalog,
+            'ano_letivo_vigente_id' => $anoLetivoMaisRecente?->id,'catalog' => $catalog,
             'filters'           => $request->only(['concelho', 'escola_id', 'ano_letivo_id', 'ano_escolar_id'])
         ]);
     }
@@ -66,6 +62,15 @@ class ManuaisController extends Controller
             ->where('ano_letivo_id', $request->ano_letivo_id)
             ->where('ano_escolar_id', $request->ano_escolar_id)
             ->first();
+
+        // Se não existir lista para o ano letivo pedido, vai buscar a mais recente existente
+        if (!$lista) {
+            $lista = ListaLivro::where('escola_id', $request->escola_id)
+                ->where('ano_escolar_id', $request->ano_escolar_id)
+                ->where('ano_letivo_id', '<', $request->ano_letivo_id)
+                ->orderByDesc('ano_letivo_id')
+                ->first();
+        }
 
         if ($lista) {
             $items = collect();
@@ -81,7 +86,7 @@ class ManuaisController extends Controller
                         'tipo' => $item->manualLivro->tipo,
                         'disciplina_id' => $item->manualLivro->disciplina_id,
                         'ano_escolar_id' => $item->manualLivro->ano_escolar_id,
-                        'updated_at' => $item->manualLivro->updated_at?->toISOString(),
+                        'status_alerta' => $item->manualLivro->status_alerta,
                         'disciplina' => $item->manualLivro->disciplina ? [
                             'id' => $item->manualLivro->disciplina->id,
                             'nome' => $item->manualLivro->disciplina->nome,
@@ -99,7 +104,7 @@ class ManuaisController extends Controller
                         'tipo' => $item->cadernoLivro->tipo,
                         'disciplina_id' => $item->cadernoLivro->disciplina_id,
                         'ano_escolar_id' => $item->cadernoLivro->ano_escolar_id,
-                        'updated_at' => $item->cadernoLivro->updated_at?->toISOString(),
+                        'status_alerta' => $item->cadernoLivro->status_alerta,
                         'disciplina' => $item->cadernoLivro->disciplina ? [
                             'id' => $item->cadernoLivro->disciplina->id,
                             'nome' => $item->cadernoLivro->disciplina->nome,
@@ -131,13 +136,18 @@ public function store(Request $request)
         'precos.*.preco' => 'nullable|numeric|min:0',
     ]);
 
-    // Atualizar preços dos livros
+    // Atualizar preços dos livros e resetar status_alerta a verde
     if ($request->precos) {
         foreach ($request->precos as $item) {
             if (isset($item['id']) && isset($item['preco'])) {
-                Livro::where('id', $item['id'])->update(['preco' => $item['preco']]);
+                Livro::where('id', $item['id'])->update(['preco' => $item['preco'], 'status_alerta' => 0]);
             }
         }
+    }
+
+    // Resetar status_alerta a verde para todos os livros da lista
+    if ($request->items && count($request->items) > 0) {
+        Livro::whereIn('id', $request->items)->update(['status_alerta' => 0]);
     }
 
     $lista = ListaLivro::updateOrCreate([

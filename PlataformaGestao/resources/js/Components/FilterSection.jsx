@@ -11,6 +11,12 @@ export default function FilterSection({
             <div className="flex flex-col gap-6 px-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
                     <FilterSelect
+                        label="Ano Letivo"
+                        options={anos_letivos}
+                        value={data.ano_letivo_id}
+                        onChange={e => setData('ano_letivo_id', e.target.value)}
+                    />
+                    <FilterSelect
                         label="Concelho"
                         options={concelhos}
                         value={data.concelho}
@@ -22,12 +28,6 @@ export default function FilterSection({
                         value={data.escola_id}
                         onChange={e => setData('escola_id', e.target.value)}
                         disabled={!data.concelho}
-                    />
-                    <FilterSelect
-                        label="Ano Letivo"
-                        options={anos_letivos}
-                        value={data.ano_letivo_id}
-                        onChange={e => setData('ano_letivo_id', e.target.value)}
                     />
                     <FilterSelect
                         label="Ano Escolar"

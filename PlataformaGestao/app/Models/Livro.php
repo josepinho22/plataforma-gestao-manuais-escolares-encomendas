@@ -25,6 +25,7 @@ class Livro extends Model
         'codigo_interno',
         'preco',
         'ativo',
+        'status_alerta',
     ];
 
     protected $casts = [

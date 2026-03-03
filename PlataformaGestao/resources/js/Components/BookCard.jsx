@@ -1,21 +1,17 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { FaGripVertical, FaTrash, FaExclamationTriangle } from "react-icons/fa";
 
-function getUpdateStatus(updatedAt) {
-    if (!updatedAt) return null;
-    const updatedYear = new Date(updatedAt).getFullYear();
-    const currentYear = new Date().getFullYear();
-
-    if (updatedYear >= currentYear) {
-        return { bg: 'bg-green-50 border-green-200', icon: 'text-green-400', title: `Atualizado em ${updatedYear}` };
-    } else if (updatedYear === currentYear - 1) {
-        return { bg: 'bg-orange-50 border-yellow-200', icon: 'text-orange-400', title: `Atualizado em ${updatedYear}` };
+function getStatusFromAlerta(statusAlerta) {
+    if (statusAlerta === 0) {
+        return { bg: 'bg-green-50 border-green-200', icon: 'text-green-400', title: 'Atualizado' };
+    } else if (statusAlerta === 1) {
+        return { bg: 'bg-orange-50 border-yellow-200', icon: 'text-orange-400', title: 'Atualizado há 1 ano letivo' };
     }
-    return { bg: 'bg-red-100 border-red-400', icon: 'text-red-600', title: `Atualizado em ${updatedYear} (desatualizado)` };
+    return { bg: 'bg-red-100 border-red-400', icon: 'text-red-600', title: 'Desatualizado' };
 }
 
 export default function BookCard({ item, index, isRemovable, onRemove, onPriceChange, showUpdateAlert, draggablePrefix = '' }) {
-    const status = showUpdateAlert ? getUpdateStatus(item.updated_at) : null;
+    const status = showUpdateAlert ? getStatusFromAlerta(item.status_alerta) : null;
     return (
         <Draggable draggableId={`${draggablePrefix}${item.id}`} index={index}>
             {(provided, snapshot) => (

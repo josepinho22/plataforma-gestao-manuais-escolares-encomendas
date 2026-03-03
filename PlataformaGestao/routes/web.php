@@ -147,6 +147,7 @@ Route::post('/disciplinas', [\App\Http\Controllers\DisciplinasController::class,
 Route::put('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'update'])->name('disciplinas.update');
 Route::delete('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'destroy'])->name('disciplinas.destroy');
 
+Route::post('/anos-letivos/avancar', [\App\Http\Controllers\AnosLetivosController::class, 'avancar'])->name('anos-letivos.avancar');
 Route::post('/anos-letivos', [\App\Http\Controllers\AnosLetivosController::class, 'store'])->name('anos-letivos.store');
 Route::put('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'update'])->name('anos-letivos.update');
 Route::delete('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'destroy'])->name('anos-letivos.destroy');

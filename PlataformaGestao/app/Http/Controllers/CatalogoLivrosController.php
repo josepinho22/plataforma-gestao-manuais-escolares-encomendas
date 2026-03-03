@@ -151,7 +151,7 @@ class CatalogoLivrosController extends Controller
             'isbn' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $livro->update($data);
+        $livro->update(array_merge($data, ['status_alerta' => 0]));
 
         return redirect()->route('catalogo.livros.index')
             ->with('success', 'Livro atualizado com sucesso.');
@@ -219,7 +219,7 @@ class CatalogoLivrosController extends Controller
 
         if ($deletedLivro) {
             $deletedLivro->restore();
-            $deletedLivro->update($data);
+            $deletedLivro->update(array_merge($data, ['status_alerta' => 0]));
 
             return redirect()
                 ->route('catalogo.livros.index')

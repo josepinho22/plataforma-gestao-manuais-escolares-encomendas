@@ -30,19 +30,6 @@ export default function Login({ status, canResetPassword }) {
 
             {/* Cartão de Login */}
             <div className="w-full sm:max-w-md mt-6 px-6 py-10 bg-white shadow-xl overflow-hidden sm:rounded-lg">
-                
-                {/* NOVO: Link para Registro no Topo */}
-                <div className="flex justify-end mb-6">
-                    <p className="text-sm text-gray-600">
-                        Não tem conta?{' '}
-                        <Link
-                            href={route('register')}
-                            className="font-bold text-blue-600 hover:text-blue-500 hover:underline transition-colors"
-                        >
-                            Registe-se aqui
-                        </Link>
-                    </p>
-                </div>
 
                 {/* 1. LOGO (Atualizado para o nome do ficheiro correto) */}
                 <div className="flex justify-center mb-6">

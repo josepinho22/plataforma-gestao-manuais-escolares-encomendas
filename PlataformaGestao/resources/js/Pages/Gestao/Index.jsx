@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, usePage } from "@inertiajs/react";
-import { FaPlus, FaPen, FaTrash, FaMapMarkerAlt, FaBuilding, FaGraduationCap, FaCalendarAlt } from "react-icons/fa";
+import { FaPlus, FaPen, FaTrash, FaMapMarkerAlt, FaBuilding, FaGraduationCap, FaCalendarAlt, FaLock } from "react-icons/fa";
 import ModalShell from "@/Components/Orders/Editora/ModalShell";
 
 const fmtDate = (v) => {
@@ -188,6 +188,87 @@ function AnoLetivoModal({ open, onClose, title, initial = null, onSubmit }) {
   );
 }
 
+function NovoAnoLetivoModal({ open, onClose, nextNome, error, onSubmit, loading }) {
+  const [password, setPassword] = useState("");
+
+  React.useEffect(() => {
+    if (!open) return;
+    setPassword("");
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <ModalShell title="Novo Ano Letivo" onClose={onClose} size="md">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit({ password });
+        }}
+        className="space-y-4"
+      >
+        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100">
+          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">
+            Ano letivo a criar
+          </p>
+          <p className="text-2xl font-extrabold text-indigo-900">
+            {nextNome || "—"}
+          </p>
+          {nextNome && (
+            <p className="text-xs text-indigo-500 mt-1">
+              As datas serão calculadas automaticamente com base no ano atual.
+            </p>
+          )}
+          {!nextNome && (
+            <p className="text-xs text-red-500 mt-1">
+              Não existe nenhum ano letivo registado para avançar.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-black text-gray-900 mb-2">
+            <span className="inline-flex items-center gap-1.5">
+              <FaLock className="text-gray-500" />
+              Confirmar com palavra-passe <span className="text-red-600">*</span>
+            </span>
+          </label>
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="glass-input w-full rounded-xl px-4 py-3 text-sm font-semibold text-gray-800"
+            placeholder="Introduza a sua palavra-passe"
+          />
+          {error && (
+            <p className="mt-1.5 text-xs text-red-600 font-semibold">{error}</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-black text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !nextNome}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-500/20 transition-all disabled:opacity-50"
+          >
+            <FaPlus />
+            Criar Ano Letivo
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  );
+}
+
 function ConfirmDeleteModal({ open, onClose, title, subtitle, onConfirm, loading }) {
   if (!open) return null;
 
@@ -241,6 +322,7 @@ export default function Index({ auth, concelhos, editoras, disciplinas, anosLeti
   const [deleteDisciplina, setDeleteDisciplina] = useState(null);
 
   const [newAnoLetivoOpen, setNewAnoLetivoOpen] = useState(false);
+  const [anoLetivoError, setAnoLetivoError] = useState("");
   const [editAnoLetivo, setEditAnoLetivo] = useState(null);
   const [deleteAnoLetivo, setDeleteAnoLetivo] = useState(null);
 
@@ -265,6 +347,14 @@ export default function Index({ auth, concelhos, editoras, disciplinas, anosLeti
   const editorasList    = useMemo(() => editoras || [], [editoras]);
   const disciplinasList = useMemo(() => disciplinas || [], [disciplinas]);
   const anosLetivosList = useMemo(() => anosLetivos || [], [anosLetivos]);
+
+  const nextAnoLetivoNome = useMemo(() => {
+    if (anosLetivosList.length === 0) return null;
+    const latest = [...anosLetivosList].sort((a, b) => new Date(b.data_fim) - new Date(a.data_fim))[0];
+    const match = latest.nome.match(/^(\d{4})\/(\d{4})$/);
+    if (!match) return null;
+    return `${parseInt(match[1]) + 1}/${parseInt(match[2]) + 1}`;
+  }, [anosLetivosList]);
 
   const postConcelho = (payload) => {
     router.post(route("concelhos.store"), payload, {
@@ -330,9 +420,11 @@ export default function Index({ auth, concelhos, editoras, disciplinas, anosLeti
   };
 
   const postAnoLetivo = (payload) => {
-    router.post(route("anos-letivos.store"), payload, {
+    setAnoLetivoError("");
+    router.post(route("anos-letivos.avancar"), payload, {
       preserveScroll: true,
-      onSuccess: () => setNewAnoLetivoOpen(false),
+      onError: (errors) => setAnoLetivoError(errors.password || "Erro ao criar ano letivo."),
+      onSuccess: () => { setNewAnoLetivoOpen(false); setAnoLetivoError(""); },
     });
   };
 
@@ -698,10 +790,11 @@ export default function Index({ auth, concelhos, editoras, disciplinas, anosLeti
       />
 
       {/* -------- MODAIS ANOS LETIVOS -------- */}
-      <AnoLetivoModal
+      <NovoAnoLetivoModal
         open={newAnoLetivoOpen}
-        onClose={() => setNewAnoLetivoOpen(false)}
-        title="Novo Ano Letivo"
+        onClose={() => { setNewAnoLetivoOpen(false); setAnoLetivoError(""); }}
+        nextNome={nextAnoLetivoNome}
+        error={anoLetivoError}
         onSubmit={(payload) => postAnoLetivo(payload)}
       />
 
