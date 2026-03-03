@@ -3,7 +3,6 @@ import { FaSave } from "react-icons/fa";
 
 export default function FilterSection({
     data, setData, concelhos, availableEscolas, anos_letivos, anos_escolares,
-    saveAnoLetivoId, setSaveAnoLetivoId,
     handleSave, handleCancel, processing
 }) {
     return (
@@ -38,19 +37,6 @@ export default function FilterSection({
                 </div>
 
                 <div className="flex items-end justify-end border-t border-white/40 pt-4 gap-3">
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Guardar em novo ano letivo</label>
-                        <select
-                            value={saveAnoLetivoId}
-                            onChange={e => setSaveAnoLetivoId(e.target.value)}
-                            className="glass-input rounded-xl py-2 pl-3 pr-8 text-sm appearance-none"
-                        >
-                            <option value="">Selecione</option>
-                            {anos_letivos.map(a => (
-                                <option key={a.id} value={a.id}>{a.nome}</option>
-                            ))}
-                        </select>
-                    </div>
                     <button
                         onClick={handleCancel}
                         className="px-5 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100/60 transition text-sm"
@@ -59,8 +45,8 @@ export default function FilterSection({
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={processing || !data.escola_id || !saveAnoLetivoId}
-                        className={`px-6 py-2.5 rounded-2xl font-bold flex items-center gap-2 transition text-sm ${(!data.escola_id || !saveAnoLetivoId) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97]'}`}
+                        disabled={processing || !data.escola_id}
+                        className={`px-6 py-2.5 rounded-2xl font-bold flex items-center gap-2 transition text-sm ${!data.escola_id ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.97]'}`}
                     >
                         <FaSave /> Salvar
                     </button>

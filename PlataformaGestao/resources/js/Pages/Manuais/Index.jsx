@@ -15,7 +15,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     const [selectedDisciplina, setSelectedDisciplina] = useState("");
 
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [saveAnoLetivoId, setSaveAnoLetivoId] = useState(ano_letivo_vigente_id || '');
 
     const { data, setData, post, processing, transform } = useForm({
         concelho: '',
@@ -34,7 +33,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
     useEffect(() => {
         if (ano_letivo_vigente_id && !data.ano_letivo_id) {
             setData('ano_letivo_id', ano_letivo_vigente_id);
-            setSaveAnoLetivoId(ano_letivo_vigente_id);
         }
     }, [ano_letivo_vigente_id]);
 
@@ -154,7 +152,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         setCurrentList([]);
         setSearchTerm('');
         setSelectedDisciplina('');
-        setSaveAnoLetivoId(ano_letivo_vigente_id || '');
     };
 
     const handleSave = () => {
@@ -164,8 +161,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         }));
         transform((formData) => ({
             ...formData,
-            ano_letivo_id: saveAnoLetivoId,
-            source_ano_letivo_id: data.ano_letivo_id,
             items: itemsComPreco.map(i => i.id),
             precos: itemsComPreco,
         }));
@@ -197,8 +192,6 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                     availableEscolas={availableEscolas}
                     anos_letivos={anos_letivos}
                     anos_escolares={anos_escolares}
-                    saveAnoLetivoId={saveAnoLetivoId}
-                    setSaveAnoLetivoId={setSaveAnoLetivoId}
                     handleSave={handleSave}
                     handleCancel={handleCancel}
                     processing={processing}
