@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // Nível 0 - Tabelas base (sem foreign keys)
+            SettingSeeder::class,
             UserSeeder::class,
             EditoraSeeder::class,
             DisciplinaSeeder::class,

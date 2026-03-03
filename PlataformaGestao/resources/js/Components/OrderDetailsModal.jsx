@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FaTimes, FaCheckCircle, FaHistory, FaTrash, FaFilePdf, FaEdit, FaSave, FaSearch, FaSpinner } from 'react-icons/fa';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 
 export default function OrderDetailsModal({ order: initialOrder, onClose, onSave }) {
+    const { companySettings } = usePage().props;
     const [order, setOrder] = useState(initialOrder);
     const [history, setHistory] = useState([]);
     const [activeTab, setActiveTab] = useState('items');
@@ -248,7 +249,203 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
         }
     };
 
-    const handlePrintPDF = () => window.open(`/api/orders/${order.id}/pdf`, '_blank');
+    const handlePrintPDF = () => {
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        if (!printWindow) return;
+
+        const LOGO_URL    = companySettings?.logo_url || '/images/Papelock_logo.png';
+        const STORE_NAME  = companySettings?.nome     || 'Papelock';
+        const STORE_ADDR  = companySettings?.morada   || '';
+        const STORE_PHONE = companySettings?.telefone || '';
+        const STORE_EMAIL = companySettings?.email    || '';
+        const STORE_NIF   = companySettings?.nif ? `NIF: ${companySettings.nif}` : '';
+
+        const esc = (v) =>
+            String(v ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+
+        const toNumber = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+
+        const formatEUR = (v) => {
+            try {
+                return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(toNumber(v));
+            } catch {
+                return `${toNumber(v).toFixed(2)} €`;
+            }
+        };
+
+        const items = Array.isArray(order?.items) ? order.items : [];
+
+        // Agrupar itens pelo mesmo livro (titulo + isbn) para mostrar a quantidade total
+        const grouped = [];
+        items.forEach((item) => {
+            const key = `${item.title}||${item.isbn}`;
+            const existing = grouped.find((g) => g.key === key);
+            if (existing) {
+                existing.quantity += toNumber(item.quantity);
+                existing.subtotal += toNumber(item.price) * toNumber(item.quantity);
+            } else {
+                grouped.push({
+                    key,
+                    title: item.title,
+                    isbn: item.isbn,
+                    editora: item.editora,
+                    quantity: toNumber(item.quantity),
+                    price: toNumber(item.price),
+                    subtotal: toNumber(item.price) * toNumber(item.quantity),
+                    encapar: item.encapar,
+                });
+            }
+        });
+
+        const total = grouped.reduce((acc, g) => acc + g.subtotal, 0);
+
+        const rowsHtml = grouped.map((item) => `
+            <tr>
+                <td class="td">
+                    <div class="title">${esc(item.title)}</div>
+                    <div class="muted">ISBN: ${esc(item.isbn ?? '—')} · ${esc(item.editora ?? '—')}</div>
+                </td>
+                <td class="td center">${item.quantity}</td>
+                <td class="td center">${item.encapar ? '<span class="badge">ENCAPAR</span>' : '—'}</td>
+                <td class="td right">${formatEUR(item.price)}</td>
+                <td class="td right">${formatEUR(item.subtotal)}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <!doctype html>
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <title>Encomenda #${esc(order?.id)}</title>
+                <style>
+                    :root { --text: #111827; --muted: #6B7280; --border: #E5E7EB; --soft: #F9FAFB; }
+                    * { box-sizing: border-box; }
+                    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--text); background: white; }
+                    .page { padding: 28px; }
+                    .header { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 2px solid var(--border); margin-bottom: 18px; }
+                    .brand { display: flex; align-items: center; gap: 12px; }
+                    .logo { height: 44px; width: auto; object-fit: contain; }
+                    .store { font-size: 12px; line-height: 1.4; color: var(--muted); }
+                    .store strong { color: var(--text); font-size: 13px; }
+                    .doc-title { text-align: right; }
+                    .doc-title h1 { margin: 0; font-size: 18px; font-weight: 800; }
+                    .doc-title .sub { margin-top: 6px; font-size: 12px; color: var(--muted); }
+                    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+                    .card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--soft); }
+                    .card-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+                    .row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin: 4px 0; }
+                    .row .k { color: var(--muted); }
+                    .row .v { font-weight: 700; color: var(--text); text-align: right; }
+                    table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 14px; }
+                    thead th { background: #111827; color: white; font-size: 12px; padding: 10px 12px; text-align: left; }
+                    .td { border-top: 1px solid var(--border); padding: 10px 12px; font-size: 12px; vertical-align: top; }
+                    .title { font-weight: 800; margin-bottom: 3px; }
+                    .muted { color: var(--muted); font-size: 11px; }
+                    .right { text-align: right; }
+                    .center { text-align: center; }
+                    .badge { border: 1px solid #111827; padding: 1px 5px; font-size: 10px; font-weight: 800; border-radius: 4px; }
+                    .summary { margin-top: 14px; display: flex; justify-content: flex-end; }
+                    .summary-box { min-width: 260px; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--soft); }
+                    .total { font-size: 14px; font-weight: 900; }
+                    .obs { margin-top: 14px; border: 1px dashed #9CA3AF; border-radius: 8px; padding: 10px 14px; font-size: 12px; }
+                    .obs .k { font-weight: 800; display: block; margin-bottom: 4px; }
+                    .footer { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+                    @media print { .page { padding: 0; } body { margin: 0; } @page { margin: 12mm; } }
+                </style>
+            </head>
+            <body>
+                <div class="page">
+                    <div class="header">
+                        <div class="brand">
+                            <img class="logo" src="${esc(LOGO_URL)}" alt="Logo" onerror="this.style.display='none'" />
+                            <div class="store">
+                                <strong>${esc(STORE_NAME)}</strong><br/>
+                                ${esc(STORE_ADDR)}<br/>
+                                ${esc(STORE_PHONE)} · ${esc(STORE_EMAIL)}<br/>
+                                ${esc(STORE_NIF)}
+                            </div>
+                        </div>
+                        <div class="doc-title">
+                            <h1>Encomenda #${esc(order?.id)}</h1>
+                            <div class="sub">Documento gerado em: ${esc(new Date().toLocaleString('pt-PT'))}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Dados do Cliente</div>
+                            <div class="row"><span class="k">Nome</span><span class="v">${esc(order?.student_name)}</span></div>
+                            <div class="row"><span class="k">NIF</span><span class="v">${esc(order?.nif)}</span></div>
+                            ${order?.telefone ? `<div class="row"><span class="k">Telefone</span><span class="v">${esc(order.telefone)}</span></div>` : ''}
+                            ${order?.id_mega ? `<div class="row"><span class="k">ID Mega</span><span class="v">${esc(order.id_mega)}</span></div>` : ''}
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Contexto Escolar</div>
+                            <div class="row"><span class="k">Escola</span><span class="v">${esc(order?.school)}</span></div>
+                            <div class="row"><span class="k">Ano Escolar</span><span class="v">${esc(order?.year)}</span></div>
+                            <div class="row"><span class="k">Ano Letivo</span><span class="v">${esc(order?.ano_letivo)}</span></div>
+                            <div class="row"><span class="k">Data</span><span class="v">${esc(order?.date)}</span></div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Livro</th>
+                                <th style="width:70px; text-align:center;">Qtd</th>
+                                <th style="width:90px; text-align:center;">Serviço</th>
+                                <th style="width:110px; text-align:right;">Preço Un.</th>
+                                <th style="width:110px; text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${grouped.length === 0
+                                ? '<tr><td class="td" colspan="5"><span class="muted">Sem itens.</span></td></tr>'
+                                : rowsHtml
+                            }
+                        </tbody>
+                    </table>
+
+                    <div class="summary">
+                        <div class="summary-box">
+                            <div class="row"><span class="k">Nº de livros</span><span class="v">${grouped.length}</span></div>
+                            <div class="row total"><span>Total a Pagar</span><span>${formatEUR(total)}</span></div>
+                        </div>
+                    </div>
+
+                    ${order?.observacao ? `
+                    <div class="obs">
+                        <span class="k">Observações</span>
+                        ${esc(order.observacao)}
+                    </div>` : ''}
+
+                    <div class="footer">
+                        <div>Impresso para fins de controlo interno.</div>
+                        <div>${esc(STORE_NAME)} · ${esc(STORE_PHONE)}</div>
+                    </div>
+                </div>
+
+                <script>
+                    window.onload = function () {
+                        setTimeout(function () { window.print(); }, 250);
+                    };
+                    window.onafterprint = function () { window.close(); };
+                </script>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+    };
 
     const startEditQty = (item) => {
         setEditingItemId(item.id);

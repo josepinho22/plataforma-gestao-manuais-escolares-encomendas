@@ -1,21 +1,22 @@
 import React from "react";
 import { FaEye, FaInbox, FaPrint } from "react-icons/fa";
+import { usePage } from "@inertiajs/react";
 import StatusPill from "@/Components/Orders/Editora/StatusPill";
 import { formatEUR } from "@/Components/Orders/Editora/utils";
 
-const handlePrint = (order) => {
+const handlePrint = (order, company) => {
   const printWindow = window.open("", "_blank", "width=900,height=700");
   if (!printWindow) {
     console.error("A janela de impressão não foi aberta (pop-up bloqueado?).");
     return;
   }
 
-  const LOGO_URL = "/images/Papelock_logo.png";
-  const STORE_NAME = "Papelock";
-  const STORE_ADDR = "Rua X, 000 - 0000-000 Cidade";
-  const STORE_PHONE = "+351 9xx xxx xxx";
-  const STORE_EMAIL = "geral@papelix.pt";
-  const STORE_NIF = "NIF: 123456789";
+  const LOGO_URL   = company?.logo_url || "/images/Papelock_logo.png";
+  const STORE_NAME = company?.nome     || "Papelock";
+  const STORE_ADDR = company?.morada   || "";
+  const STORE_PHONE = company?.telefone || "";
+  const STORE_EMAIL = company?.email   || "";
+  const STORE_NIF   = company?.nif ? `NIF: ${company.nif}` : "";
 
   const esc = (v) =>
     String(v ?? "")
@@ -346,6 +347,8 @@ function EmptyState({ title, desc }) {
 }
 
 export default function OrdersHistoryTable({ orders, onView, onReceive }) {
+  const { companySettings } = usePage().props;
+
   return (
     <div>
       <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">
@@ -410,7 +413,7 @@ export default function OrdersHistoryTable({ orders, onView, onReceive }) {
 
                         {/* Botão de impressão */}
                         <button
-                          onClick={() => handlePrint(o)}
+                          onClick={() => handlePrint(o, companySettings)}
                           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white/60 hover:bg-white text-gray-800 font-bold text-xs transition-colors"
                         >
                           <FaPrint />

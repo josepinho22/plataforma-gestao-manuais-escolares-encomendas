@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CompanySettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EncomendasEditoraController;
@@ -115,6 +116,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Dados da empresa
+    Route::patch('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
 });
 // 2. Rotas Protegidas (Todas as rotas do Papelix devem estar aqui dentro)
 Route::middleware(['auth', 'verified'])->group(function () {
