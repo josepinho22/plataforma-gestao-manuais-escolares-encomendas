@@ -38,18 +38,26 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
         }
     }, [ano_letivo_vigente_id]);
 
-    // 4. Lógica de Filtragem Combinada 
+    // 4. Lógica de Filtragem Combinada
     const filteredCatalog = catalog.filter(book => {
         if (!book || !book.id) return false;
 
         const matchesSearch = book.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              book.isbn?.includes(searchTerm);
-        
-        const matchesDisciplina = selectedDisciplina === "" || 
+
+        const matchesDisciplina = selectedDisciplina === "" ||
                                  book.disciplina?.nome === selectedDisciplina;
 
-        return matchesSearch && matchesDisciplina;
+        const matchesAnoEscolar = !data.ano_escolar_id ||
+                                 String(book.ano_escolar_id) === String(data.ano_escolar_id);
+
+        return matchesSearch && matchesDisciplina && matchesAnoEscolar;
     });
+
+    // 5. Lista atual filtrada pelo ano escolar selecionado
+    const filteredCurrentList = data.ano_escolar_id
+        ? currentList.filter(book => String(book.ano_escolar_id) === String(data.ano_escolar_id))
+        : currentList;
 
     useEffect(() => {
         if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
@@ -210,7 +218,7 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                         
                         {/* LISTA ATUAL */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-extrabold text-gray-700 tracking-tight">Lista Atual ({currentList.length})</h3>
+                            <h3 className="text-sm font-extrabold text-gray-700 tracking-tight">Lista Atual ({filteredCurrentList.length})</h3>
                             <Droppable droppableId="currentList">
                                 {(provided, snapshot) => (
                                     <div
@@ -219,17 +227,18 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                                         className={`p-4 rounded-2xl border-2 border-dashed min-h-[500px] transition-colors
                                             ${snapshot.isDraggingOver ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50/80 border-gray-200'}`}
                                     >
-                                        {currentList.length > 0 ? (
-                                            currentList.map((item, index) => (
+                                        {filteredCurrentList.length > 0 ? (
+                                            filteredCurrentList.map((item, index) => (
                                                 <BookCard
                                                     key={`list-item-${item.id}-${index}`}
                                                     item={item}
                                                     index={index}
                                                     isRemovable
-                                                    onRemove={() => setCurrentList(prev => prev.filter((_, i) => i !== index))}
-                                                    onPriceChange={(idx, value) => {
-                                                        setCurrentList(prev => prev.map((it, i) =>
-                                                            i === idx ? { ...it, preco: value } : it
+                                                    showUpdateAlert
+                                                    onRemove={() => setCurrentList(prev => prev.filter(i => i.id !== item.id))}
+                                                    onPriceChange={(_, value) => {
+                                                        setCurrentList(prev => prev.map(it =>
+                                                            it.id === item.id ? { ...it, preco: value } : it
                                                         ));
                                                     }}
                                                     draggablePrefix="list-"
