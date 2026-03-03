@@ -11,6 +11,7 @@ import axios from 'axios';
 export default function CreateOrder({ auth, schools, concelhos, anos_escolares }) {
     const [studentLoading, setStudentLoading] = useState(false);
     const [studentStatus, setStudentStatus] = useState(null); // 'found' | 'new' | null
+    const [idMegaConflict, setIdMegaConflict] = useState(null); // { nome, nif }
     const [booksLoading, setBooksLoading] = useState(false);
     const [availableBooks, setAvailableBooks] = useState([]);
     const [cart, setCart] = useState({});
@@ -35,24 +36,41 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
         : schools;
 
     const handleStudentLookup = async (field, value) => {
-        if (!value) return;
+        if (!value) {
+            setData(prev => ({ ...prev, nome: '', telefone: '', email: '', id_mega: '' }));
+            setStudentStatus(null);
+            return;
+        }
         setStudentLoading(true);
         try {
             const response = await axios.get('/api/students/lookup', { params: { [field]: value } });
             if (response.data.found) {
                 setData(prev => ({
                     ...prev,
-                    nome: response.data.nome || prev.nome,
-                    telefone: response.data.telefone || prev.telefone,
-                    email: response.data.email || prev.email,
-                    id_mega: response.data.id_mega || prev.id_mega,
+                    nome: response.data.nome || '',
+                    telefone: response.data.telefone || '',
+                    email: response.data.email || '',
+                    id_mega: response.data.id_mega || '',
                 }));
                 setStudentStatus('found');
             } else {
+                setData(prev => ({ ...prev, nome: '', telefone: '', email: '', id_mega: '' }));
                 setStudentStatus('new');
             }
         } catch (error) { console.log('Aluno não encontrado'); }
         finally { setStudentLoading(false); }
+    };
+
+    const handleIdMegaBlur = async (value) => {
+        if (!value || !data.nif) { setIdMegaConflict(null); return; }
+        try {
+            const response = await axios.get('/api/students/lookup', { params: { id_mega: value } });
+            if (response.data.found && response.data.nif && response.data.nif !== data.nif) {
+                setIdMegaConflict({ nome: response.data.nome, nif: response.data.nif });
+            } else {
+                setIdMegaConflict(null);
+            }
+        } catch { setIdMegaConflict(null); }
     };
 
     const [manualBooks, setManualBooks] = useState([]);
@@ -122,6 +140,13 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
         setEncaparMap(prev => ({ ...prev, [bookId]: !prev[bookId] }));
     };
 
+    const removeBook = (bookId) => {
+        setAvailableBooks(prev => prev.filter(b => b.id !== bookId));
+        setManualBooks(prev => prev.filter(b => b.id !== bookId));
+        setCart(prev => { const { [bookId]: _, ...rest } = prev; return rest; });
+        setEncaparMap(prev => { const { [bookId]: _, ...rest } = prev; return rest; });
+    };
+
     // Modal smooth close
     const closeModal = useCallback(() => {
         setModalClosing(true);
@@ -176,7 +201,7 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
 
     const total = availableBooks.reduce((sum, book) => sum + (book.preco * (cart[book.id] || 0)), 0);
     const itemCount = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
-    const isFormValid = data.nif && data.nome && data.escola_id && data.ano_escolar_id && itemCount > 0;
+    const isFormValid = data.nif && data.nome && data.escola_id && data.ano_escolar_id && itemCount > 0 && !idMegaConflict;
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -270,11 +295,19 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
                                         />
                                         <GlassInput
                                             label="ID Mega" value={data.id_mega}
-                                            onChange={e => setData('id_mega', e.target.value)}
-                                            onBlur={e => handleStudentLookup('id_mega', e.target.value)}
+                                            onChange={e => { setData('id_mega', e.target.value); setIdMegaConflict(null); }}
+                                            onBlur={e => handleIdMegaBlur(e.target.value)}
                                             placeholder="Opcional"
                                         />
                                     </div>
+                                    {idMegaConflict && (
+                                        <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-50 border border-red-200">
+                                            <FaExclamationCircle className="text-red-500 mt-0.5 shrink-0" />
+                                            <p className="text-[12px] text-red-700 font-medium leading-snug">
+                                                Este ID Mega já está associado ao aluno <strong>{idMegaConflict.nome}</strong> (NIF: {idMegaConflict.nif}). Corrija o ID Mega antes de continuar.
+                                            </p>
+                                        </div>
+                                    )}
                                     <GlassInput
                                         label="Nome Completo" value={data.nome} error={errors.nome}
                                         onChange={e => setData('nome', e.target.value)}
@@ -350,16 +383,18 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
                                             <span className="text-[10px] font-bold text-gray-400 uppercase mr-0.5">Encapar:</span>
                                             <PillBtn label="Tudo" onClick={() => setEncaparBulk(null)} variant="amber" />
                                             <PillBtn label="Manuais" onClick={() => setEncaparBulk('Manual')} variant="amber" />
+                                            <PillBtn label="Cadernos" onClick={() => setEncaparBulk('Caderno')} variant="amber" />
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Table header */}
                                 <div className="grid grid-cols-12 gap-2 px-6 py-2 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/50">
-                                    <div className="col-span-5">Livro</div>
+                                    <div className="col-span-4">Livro</div>
                                     <div className="col-span-2 text-right">Preço</div>
                                     <div className="col-span-3 text-center">Qtd.</div>
                                     <div className="col-span-2 text-center">Encapar</div>
+                                    <div className="col-span-1"></div>
                                 </div>
 
                                 {/* Book list */}
@@ -383,7 +418,7 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
                                                 return (
                                                     <div key={book.id}
                                                          className={`grid grid-cols-12 gap-2 px-6 py-3 items-center transition-all duration-200 border-b border-gray-100/50 ${isSelected ? 'bg-indigo-50/70 border-l-[3px] border-l-indigo-500 pl-[calc(1.5rem-3px)]' : 'hover:bg-gray-50/60 border-l-[3px] border-l-transparent'}`}>
-                                                        <div className="col-span-5 overflow-hidden">
+                                                        <div className="col-span-4 overflow-hidden">
                                                             <p className={`text-[13px] font-semibold truncate ${isSelected ? 'text-indigo-900' : 'text-gray-800'}`}>{book.titulo}</p>
                                                             <div className="flex items-center gap-2 mt-0.5">
                                                                 <p className="text-[11px] text-gray-400 truncate">{book.isbn}</p>
@@ -411,6 +446,15 @@ export default function CreateOrder({ auth, schools, concelhos, anos_escolares }
                                                                 className={`w-7 h-7 flex items-center justify-center rounded-[10px] border transition-all duration-200 active:scale-90 ${isEncapar ? 'bg-gradient-to-b from-amber-400 to-amber-500 border-amber-400 text-white shadow-sm shadow-amber-500/30' : 'bg-white border-gray-200 text-gray-300 hover:border-amber-300 hover:bg-amber-50'}`}
                                                             >
                                                                 {isEncapar && <span className="text-xs font-bold">✓</span>}
+                                                            </button>
+                                                        </div>
+                                                        <div className="col-span-1 flex justify-center">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeBook(book.id)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-[10px] bg-white border border-gray-200 text-gray-300 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200 active:scale-90"
+                                                            >
+                                                                <FaTimes className="text-[10px]" />
                                                             </button>
                                                         </div>
                                                     </div>

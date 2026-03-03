@@ -262,7 +262,8 @@ export default function OrdersIndex({ auth, orders, stats, filters, filterOption
             {selectedOrder && (
                 <OrderDetailsModal
                     order={selectedOrder}
-                    onClose={() => {
+                    onClose={() => setSelectedOrder(null)}
+                    onSave={() => {
                         setSelectedOrder(null);
                         router.reload({ preserveScroll: true });
                     }}
@@ -347,7 +348,7 @@ function GlassOrderRow({ order, onClick }) {
                         <FaSchool className="text-gray-300" />
                         {order.school}
                     </div>
-                    <span className="text-[10px] text-gray-400 ml-5">{order.year} • {order.class_name || 'N/A'}</span>
+                    <span className="text-[10px] text-gray-400 ml-5">{order.concelho} • {order.year}</span>
                 </div>
             </div>
 

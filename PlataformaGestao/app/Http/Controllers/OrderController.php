@@ -27,7 +27,8 @@ class OrderController extends Controller
                 'anoLetivo',
                 'lista',
                 'itens.livro.disciplina',
-                'itens.livro.editora'
+                'itens.livro.editora',
+                'itens.livro.stock',
             ]);
 
         // Filtro de pesquisa (por nome do aluno, NIF ou ID)
@@ -77,7 +78,8 @@ class OrderController extends Controller
                 'student_name' => $encomenda->nome,
                 'telefone' => $encomenda->telefone,
                 'school' => $encomenda->escola?->nome ?? 'N/A',
-                'year' => $encomenda->anoEscolar?->nome ?? 'N/A',
+                'concelho' => $encomenda->escola?->concelho?->nome ?? 'N/A',
+                'year' => $encomenda->anoEscolar?->name ?? 'N/A',
                 'ano_letivo' => $encomenda->anoLetivo?->nome ?? 'N/A',
                 'date' => $encomenda->created_at->format('d/m/Y'),
                 'status' => $this->mapStatus($encomenda->status),
@@ -86,6 +88,7 @@ class OrderController extends Controller
                 'items' => $encomenda->itens->map(function($item) {
                     return [
                         'id' => $item->id,
+                        'livro_id' => $item->livro_id,
                         'title' => $item->livro?->titulo ?? 'Livro não encontrado',
                         'isbn' => $item->livro?->isbn,
                         'disciplina' => $item->livro?->disciplina?->nome,
@@ -99,6 +102,7 @@ class OrderController extends Controller
                         'ensacado' => $item->ensacado,
                         'entregue' => $item->entregue,
                         'quantidade_entregue' => $item->quantidade_entregue,
+                        'stock_disponivel' => $item->livro?->stock?->quantidade ?? 0,
                     ];
                 })->toArray(),
             ];
@@ -269,6 +273,7 @@ class OrderController extends Controller
         if ($aluno) {
             return response()->json([
                 'found' => true,
+                'nif' => $aluno->nif,
                 'nome' => $aluno->nome,
                 'telefone' => $aluno->telefone,
                 'email' => $aluno->email,
@@ -286,6 +291,7 @@ class OrderController extends Controller
         if ($encomenda) {
             return response()->json([
                 'found' => true,
+                'nif' => $encomenda->nif,
                 'nome' => $encomenda->nome,
                 'telefone' => $encomenda->telefone,
                 'email' => null,
@@ -550,6 +556,9 @@ class OrderController extends Controller
             // Recalcular status da encomenda com base no estado dos itens
             $newStatus = $this->checkAndUpdateOrderStatus($orderId);
 
+            // Recarregar stock atualizado
+            $item->load('livro.stock');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Item atualizado com sucesso',
@@ -558,6 +567,7 @@ class OrderController extends Controller
                     'encapado' => $item->encapado,
                     'ensacado' => $item->ensacado,
                     'entregue' => $item->entregue,
+                    'stock_disponivel' => $item->livro?->stock?->quantidade ?? 0,
                 ],
                 'order_status' => $newStatus ? $this->mapStatus($newStatus) : null,
             ]);
@@ -689,10 +699,11 @@ class OrderController extends Controller
             DB::commit();
 
             // Retornar os itens normalizados no mesmo formato do frontend
-            $order->load('itens.livro.editora', 'itens.livro.disciplina');
+            $order->load('itens.livro.editora', 'itens.livro.disciplina', 'itens.livro.stock');
             $formattedItems = $order->itens->map(function ($item) {
                 return [
                     'id' => $item->id,
+                    'livro_id' => $item->livro_id,
                     'title' => $item->livro?->titulo ?? 'Livro não encontrado',
                     'isbn' => $item->livro?->isbn,
                     'disciplina' => $item->livro?->disciplina?->nome,
@@ -705,6 +716,7 @@ class OrderController extends Controller
                     'ensacado' => $item->ensacado,
                     'entregue' => $item->entregue,
                     'quantidade_entregue' => $item->quantidade_entregue,
+                    'stock_disponivel' => $item->livro?->stock?->quantidade ?? 0,
                 ];
             });
 
@@ -813,7 +825,7 @@ class OrderController extends Controller
                             'entregue' => false,
                             'quantidade_entregue' => 0,
                         ]);
-                        $newItemModel->load('livro.editora', 'livro.disciplina');
+                        $newItemModel->load('livro.editora', 'livro.disciplina', 'livro.stock');
                         $newItems[] = $newItemModel;
                     }
 
@@ -861,11 +873,12 @@ class OrderController extends Controller
             }
 
             $item->save();
-            $item->load('livro.editora', 'livro.disciplina');
+            $item->load('livro.editora', 'livro.disciplina', 'livro.stock');
 
             $formatItem = function ($i) {
                 return [
                     'id' => $i->id,
+                    'livro_id' => $i->livro_id,
                     'title' => $i->livro?->titulo ?? 'N/A',
                     'isbn' => $i->livro?->isbn,
                     'disciplina' => $i->livro?->disciplina?->nome,
@@ -877,6 +890,7 @@ class OrderController extends Controller
                     'ensacado' => $i->ensacado,
                     'entregue' => $i->entregue,
                     'quantidade_entregue' => $i->quantidade_entregue ?? 0,
+                    'stock_disponivel' => $i->livro?->stock?->quantidade ?? 0,
                 ];
             };
 

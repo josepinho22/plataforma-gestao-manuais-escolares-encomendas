@@ -3,7 +3,7 @@ import { FaTimes, FaCheckCircle, FaHistory, FaTrash, FaFilePdf, FaEdit, FaSave, 
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 
-export default function OrderDetailsModal({ order: initialOrder, onClose }) {
+export default function OrderDetailsModal({ order: initialOrder, onClose, onSave }) {
     const [order, setOrder] = useState(initialOrder);
     const [history, setHistory] = useState([]);
     const [activeTab, setActiveTab] = useState('items');
@@ -26,6 +26,13 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
         setModalClosing(true);
         setTimeout(() => {
             onClose();
+        }, 200);
+    };
+
+    const saveModal = () => {
+        setModalClosing(true);
+        setTimeout(() => {
+            (onSave ?? onClose)();
         }, 200);
     };
 
@@ -60,21 +67,51 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
     // Atualizar checkbox de item (Optimistic UI)
     const handleCheckboxChange = async (itemId, field, currentValue) => {
         const newValue = !currentValue;
+        const currentItem = order.items.find(i => i.id === itemId);
+
         setOrder(prev => ({
             ...prev,
-            items: prev.items.map(item =>
-                item.id === itemId ? { ...item, [field]: newValue } : item
-            )
+            items: prev.items.map(item => {
+                if (item.id === itemId) return { ...item, [field]: newValue };
+                // Para ensacado: atualizar stock_disponivel dos itens do mesmo livro
+                if (field === 'ensacado' && currentItem && item.livro_id === currentItem.livro_id && !item.ensacado) {
+                    const delta = newValue ? -1 : 1;
+                    return { ...item, stock_disponivel: Math.max(0, (item.stock_disponivel ?? 0) + delta) };
+                }
+                return item;
+            })
         }));
+
         try {
-            await axios.patch(`/api/orders/${order.id}/items/${itemId}`, { field, value: newValue });
+            const response = await axios.patch(`/api/orders/${order.id}/items/${itemId}`, { field, value: newValue });
+            // Sincronizar stock real do servidor para todos os itens do mesmo livro
+            if (field === 'ensacado' && response.data.item?.stock_disponivel !== undefined) {
+                const serverStock = response.data.item.stock_disponivel;
+                setOrder(prev => ({
+                    ...prev,
+                    items: prev.items.map(item => {
+                        if (!currentItem) return item;
+                        if (item.livro_id === currentItem.livro_id && !item.ensacado) {
+                            return { ...item, stock_disponivel: serverStock };
+                        }
+                        if (item.id === itemId) return { ...item, stock_disponivel: serverStock };
+                        return item;
+                    })
+                }));
+            }
             loadHistory();
         } catch (error) {
+            // Reverter alterações optimistas
             setOrder(prev => ({
                 ...prev,
-                items: prev.items.map(item =>
-                    item.id === itemId ? { ...item, [field]: currentValue } : item
-                )
+                items: prev.items.map(item => {
+                    if (item.id === itemId) return { ...item, [field]: currentValue };
+                    if (field === 'ensacado' && currentItem && item.livro_id === currentItem.livro_id && !item.ensacado) {
+                        const delta = newValue ? 1 : -1;
+                        return { ...item, stock_disponivel: Math.max(0, (item.stock_disponivel ?? 0) + delta) };
+                    }
+                    return item;
+                })
             }));
             alert('Erro ao atualizar item. Tente novamente.');
         }
@@ -356,13 +393,18 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
 
                                                     {/* Ensacar */}
                                                     <td className="px-4 py-3 text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={item.ensacado}
-                                                            onChange={() => handleCheckboxChange(item.id, 'ensacado', item.ensacado)}
-                                                            disabled={noBook}
-                                                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer accent-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                        />
+                                                        <div className="flex flex-col items-center gap-0.5">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={item.ensacado}
+                                                                onChange={() => handleCheckboxChange(item.id, 'ensacado', item.ensacado)}
+                                                                disabled={noBook || (!item.ensacado && (item.stock_disponivel ?? 0) <= 0)}
+                                                                className="w-4 h-4 text-indigo-600 border-gray-300 rounded cursor-pointer accent-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                            />
+                                                            {!noBook && !item.ensacado && (item.stock_disponivel ?? 0) <= 0 && (
+                                                                <span className="text-[9px] font-semibold text-red-400 leading-none">Sem stock</span>
+                                                            )}
+                                                        </div>
                                                     </td>
 
                                                     {/* Encapar */}
@@ -370,8 +412,8 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
                                                         <input
                                                             type="checkbox"
                                                             checked={item.encapado}
-                                                            onChange={() => item.encapar && handleCheckboxChange(item.id, 'encapado', item.encapado)}
-                                                            disabled={!item.encapar || noBook}
+                                                            onChange={() => item.encapar && item.ensacado && handleCheckboxChange(item.id, 'encapado', item.encapado)}
+                                                            disabled={!item.encapar || noBook || !item.ensacado}
                                                             className="w-4 h-4 text-amber-500 border-gray-300 rounded cursor-pointer accent-amber-500 disabled:opacity-30 disabled:cursor-not-allowed"
                                                         />
                                                     </td>
@@ -382,7 +424,7 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
                                                             type="checkbox"
                                                             checked={item.entregue}
                                                             onChange={() => handleCheckboxChange(item.id, 'entregue', item.entregue)}
-                                                            disabled={noBook}
+                                                            disabled={noBook || !item.ensacado || (item.encapar && !item.encapado)}
                                                             className="w-4 h-4 text-emerald-600 border-gray-300 rounded cursor-pointer accent-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed"
                                                         />
                                                     </td>
@@ -559,7 +601,7 @@ export default function OrderDetailsModal({ order: initialOrder, onClose }) {
                         </button>
                     </div>
                     <button
-                        onClick={closeModal}
+                        onClick={saveModal}
                         className="px-6 py-2 bg-gradient-to-b from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-[13px] font-bold rounded-xl shadow-sm shadow-indigo-500/25 hover:shadow-md transition-all duration-200 active:scale-[0.97]"
                     >
                         Guardar
