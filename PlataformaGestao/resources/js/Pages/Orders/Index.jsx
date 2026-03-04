@@ -319,6 +319,9 @@ function GlassOrderRow({ order, onClick }) {
         pendente: { bg: 'bg-amber-500/10', text: 'text-amber-600', label: 'Pendente' },
         processamento: { bg: 'bg-blue-500/10', text: 'text-blue-600', label: 'Processamento' },
         concluida: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', label: 'Concluída' },
+        ensacamento: { bg: 'bg-blue-600', text: 'text-blue-50', label: 'Aguarda Ensacamento' },
+        encapamento: { bg: 'bg-blue-500/10', text: 'text-blue-600', label: 'Aguarda Encapamento' },
+        levantamento: { bg: 'bg-purple-500/10', text: 'text-purple-600', label: 'Aguarda Levantamento' },
     };
 
     const currentStatus = statusConfig[order.status.badge] || statusConfig.pendente;

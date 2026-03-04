@@ -186,19 +186,19 @@ class OrderController extends Controller
                 'value' => 'AGUARDA_ENSACAMENTO',
                 'label' => 'Aguarda Ensacamento',
                 'color' => 'bg-blue-100 text-blue-800',
-                'badge' => 'processamento'
+                'badge' => 'ensacamento'
             ],
             'AGUARDA_ENCAPAMENTO' => [
                 'value' => 'AGUARDA_ENCAPAMENTO',
                 'label' => 'Aguarda Encapamento',
                 'color' => 'bg-purple-100 text-purple-800',
-                'badge' => 'processamento'
+                'badge' => 'encapamento'
             ],
             'AGUARDA_LEVANTAMENTO' => [
                 'value' => 'AGUARDA_LEVANTAMENTO',
                 'label' => 'Aguarda Levantamento',
                 'color' => 'bg-indigo-100 text-indigo-800',
-                'badge' => 'processamento'
+                'badge' => 'levantamento'
             ],
             'ENTREGUE' => [
                 'value' => 'ENTREGUE',
