@@ -69,6 +69,14 @@ class OrderController extends Controller
         // Paginação
         $encomendas = $query->paginate(10);
 
+        // Recalcular status das encomendas em AGUARDA_LIVROS (podem ter stock agora)
+        foreach ($encomendas as $encomenda) {
+            if ($encomenda->status === 'AGUARDA_LIVROS') {
+                $encomenda->load(['itens.alocacoesStock', 'itens.livro.stock']);
+                $encomenda->recalculateStatus();
+            }
+        }
+
         // Transformar dados para o formato frontend
         $orders = $encomendas->map(function($encomenda) {
             return [

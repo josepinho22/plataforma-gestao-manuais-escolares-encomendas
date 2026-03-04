@@ -47,6 +47,7 @@ class EncomendaAlunoSeeder extends Seeder
                 'ano_letivo_id'  => $anoLetivo->id,
                 'ano_escolar_id' => $anoEscolar->id,
                 'lista_id'       => $lista?->id,
+                'status'         => 'AGUARDA_LIVROS',
                 'observacao'     => $observacao,
             ]);
         }
