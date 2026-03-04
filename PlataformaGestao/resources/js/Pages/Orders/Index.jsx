@@ -357,7 +357,7 @@ function GlassOrderRow({ order, onClick }) {
 
             {/* Coluna 3: Status Badge */}
             <div className="col-span-3 md:col-span-2">
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${currentStatus.bg} ${currentStatus.text}`}>
+                <span className={`inline-flex items-center justify-center w-[160px] px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${currentStatus.bg} ${currentStatus.text}`}>
                     {order.status.label}
                 </span>
             </div>
