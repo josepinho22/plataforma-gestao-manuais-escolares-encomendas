@@ -170,6 +170,24 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
             onSuccess: () => {
                 setShowSuccessModal(true);
                 setTimeout(() => setShowSuccessModal(false), 3000);
+
+                // Recarregar lista atual para atualizar cores (status_alerta)
+                if (data.escola_id && data.ano_letivo_id && data.ano_escolar_id) {
+                    axios.get(route('api.lista.manuais'), {
+                        params: {
+                            escola_id: data.escola_id,
+                            ano_letivo_id: data.ano_letivo_id,
+                            ano_escolar_id: data.ano_escolar_id
+                        }
+                    })
+                    .then(res => {
+                        const novaLista = Array.isArray(res.data) ? res.data : [];
+                        setCurrentList(novaLista);
+                    })
+                    .catch(err => {
+                        console.error("❌ Erro ao recarregar lista após guardar:", err);
+                    });
+                }
             },
         });
     };
