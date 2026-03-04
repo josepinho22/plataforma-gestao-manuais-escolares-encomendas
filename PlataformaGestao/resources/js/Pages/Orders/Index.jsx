@@ -319,6 +319,9 @@ function GlassOrderRow({ order, onClick }) {
         pendente: { bg: 'bg-amber-500/10', text: 'text-amber-600', label: 'Pendente' },
         processamento: { bg: 'bg-blue-500/10', text: 'text-blue-600', label: 'Processamento' },
         concluida: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', label: 'Concluída' },
+        ensacamento: { bg: 'bg-blue-600', text: 'text-blue-50', label: 'Aguarda Ensacamento' },
+        encapamento: { bg: 'bg-blue-500/10', text: 'text-blue-600', label: 'Aguarda Encapamento' },
+        levantamento: { bg: 'bg-purple-500/10', text: 'text-purple-600', label: 'Aguarda Levantamento' },
     };
 
     const currentStatus = statusConfig[order.status.badge] || statusConfig.pendente;
@@ -354,7 +357,7 @@ function GlassOrderRow({ order, onClick }) {
 
             {/* Coluna 3: Status Badge */}
             <div className="col-span-3 md:col-span-2">
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${currentStatus.bg} ${currentStatus.text}`}>
+                <span className={`inline-flex items-center justify-center w-[160px] px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${currentStatus.bg} ${currentStatus.text}`}>
                     {order.status.label}
                 </span>
             </div>
