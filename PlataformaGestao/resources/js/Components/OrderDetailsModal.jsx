@@ -188,11 +188,12 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
 
         const updateSet = new Set(itemsToUpdate.map(i => i.id));
 
-        // Calcular quantos itens de cada livro vão ser ensacados (para atualizar stock dos restantes)
-        const ensackedPerLivro = {};
-        if (field === 'ensacado' && targetValue) {
+        // Calcular delta de stock por livro (+ ensacar, - desensacar)
+        const stockDeltaPerLivro = {};
+        if (field === 'ensacado') {
             itemsToUpdate.forEach(item => {
-                ensackedPerLivro[item.livro_id] = (ensackedPerLivro[item.livro_id] || 0) + 1;
+                const delta = targetValue ? -1 : 1;
+                stockDeltaPerLivro[item.livro_id] = (stockDeltaPerLivro[item.livro_id] || 0) + delta;
             });
         }
 
@@ -200,20 +201,47 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
         setOrder(prev => ({
             ...prev,
             items: prev.items.map(item => {
-                if (updateSet.has(item.id)) return { ...item, [field]: targetValue };
-                // Atualizar stock_disponivel nos itens não ensacados do mesmo livro
-                if (field === 'ensacado' && targetValue && !item.ensacado && ensackedPerLivro[item.livro_id]) {
-                    return { ...item, stock_disponivel: Math.max(0, (item.stock_disponivel ?? 0) - ensackedPerLivro[item.livro_id]) };
+                if (updateSet.has(item.id)) {
+                    const delta = stockDeltaPerLivro[item.livro_id] || 0;
+                    return {
+                        ...item,
+                        [field]: targetValue,
+                        ...(field === 'ensacado' ? { stock_disponivel: Math.max(0, (item.stock_disponivel ?? 0) + delta) } : {}),
+                    };
+                }
+                // Atualizar stock_disponivel nos outros itens do mesmo livro
+                if (field === 'ensacado' && stockDeltaPerLivro[item.livro_id] !== undefined) {
+                    return { ...item, stock_disponivel: Math.max(0, (item.stock_disponivel ?? 0) + stockDeltaPerLivro[item.livro_id]) };
                 }
                 return item;
             })
         }));
         try {
-            await Promise.all(
+            const responses = await Promise.all(
                 itemsToUpdate.map(item =>
                     axios.patch(`/api/orders/${order.id}/items/${item.id}`, { field, value: targetValue })
                 )
             );
+            // Sincronizar stock real do servidor após ensacar/desensacar
+            if (field === 'ensacado') {
+                const stockByLivro = {};
+                responses.forEach((resp, idx) => {
+                    const livroId = itemsToUpdate[idx].livro_id;
+                    if (resp.data.item?.stock_disponivel !== undefined) {
+                        stockByLivro[livroId] = resp.data.item.stock_disponivel;
+                    }
+                });
+                if (Object.keys(stockByLivro).length > 0) {
+                    setOrder(prev => ({
+                        ...prev,
+                        items: prev.items.map(item =>
+                            stockByLivro[item.livro_id] !== undefined
+                                ? { ...item, stock_disponivel: stockByLivro[item.livro_id] }
+                                : item
+                        ),
+                    }));
+                }
+            }
             loadHistory();
         } catch (error) {
             alert('Erro ao atualizar itens.');

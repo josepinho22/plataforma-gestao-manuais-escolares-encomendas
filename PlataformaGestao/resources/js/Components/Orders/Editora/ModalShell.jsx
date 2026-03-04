@@ -13,9 +13,9 @@ export default function ModalShell({ title, children, onClose, size = "md" }) {
         aria-hidden="true"
       />
       <div
-        className={`relative w-full ${sizeClass} bg-white rounded-2xl shadow-xl border border-gray-100`}
+        className={`relative w-full ${sizeClass} bg-white rounded-2xl shadow-xl border border-gray-100 max-h-[90vh] flex flex-col`}
       >
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
           <div className="text-lg font-black text-gray-900">{title}</div>
           <button
             onClick={onClose}
@@ -25,7 +25,7 @@ export default function ModalShell({ title, children, onClose, size = "md" }) {
             <FaTimes className="text-gray-600" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

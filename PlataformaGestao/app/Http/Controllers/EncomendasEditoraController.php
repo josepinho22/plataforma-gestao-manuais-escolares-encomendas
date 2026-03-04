@@ -85,7 +85,10 @@ class EncomendasEditoraController extends Controller
         });
 
         $demandaSub = DB::table('encomenda_livro_aluno_itens')
-            ->selectRaw('livro_id, SUM(GREATEST(IFNULL(quantidade,0) - IFNULL(quantidade_entregue,0), 0)) as demanda')
+            ->whereNull('deleted_at')
+            ->where('ensacado', false)
+            ->where('entregue', false)
+            ->selectRaw('livro_id, SUM(IFNULL(quantidade, 0)) as demanda')
             ->groupBy('livro_id');
 
         $alocadoSub = DB::table('alocacoes_stock')

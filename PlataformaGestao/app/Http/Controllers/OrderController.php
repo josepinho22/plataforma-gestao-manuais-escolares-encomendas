@@ -531,16 +531,18 @@ class OrderController extends Controller
                 $stock = \App\Models\Stock::where('livro_id', $item->livro_id)->first();
                 if ($validated['value']) {
                     // Marcar como ensacado: deduzir stock
-                    if ($stock && $stock->quantidade >= $item->quantidade) {
-                        $stock->quantidade -= $item->quantidade;
-                        $stock->save();
-                    }
+                    $stock = \App\Models\Stock::firstOrCreate(
+                        ['livro_id' => $item->livro_id],
+                        ['quantidade' => 0]
+                    );
+                    $stock->quantidade = max(0, $stock->quantidade - $item->quantidade);
+                    $stock->save();
                 } else {
-                    // Desensacar: devolver ao stock
-                    if ($stock) {
+                    // Desensacar: devolver ao stock (só se antes estava marcado como ensacado)
+                    if ($oldValue && $stock) {
                         $stock->quantidade += $item->quantidade;
                         $stock->save();
-                    } else {
+                    } elseif ($oldValue) {
                         \App\Models\Stock::create([
                             'livro_id' => $item->livro_id,
                             'quantidade' => $item->quantidade,
