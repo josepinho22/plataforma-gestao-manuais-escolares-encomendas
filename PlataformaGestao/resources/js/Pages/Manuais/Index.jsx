@@ -95,24 +95,12 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
 
             const itensParaAdicionar = [item];
 
-            // Se arrastar MANUAL, buscar o CADERNO_ATIVIDADES correspondente
-            if (item.tipo === 'MANUAL' && item.disciplina_id) {
-                const caderno = catalog.find(livro =>
-                    livro.tipo === 'CADERNO_ATIVIDADES' &&
-                    livro.disciplina_id === item.disciplina_id &&
-                    livro.ano_escolar_id === item.ano_escolar_id
-                );
-                if (caderno) itensParaAdicionar.push(caderno);
-            }
-
-            // Se arrastar CADERNO_ATIVIDADES, buscar o MANUAL correspondente
-            if (item.tipo === 'CADERNO_ATIVIDADES' && item.disciplina_id) {
-                const manual = catalog.find(livro =>
-                    livro.tipo === 'MANUAL' &&
-                    livro.disciplina_id === item.disciplina_id &&
-                    livro.ano_escolar_id === item.ano_escolar_id
-                );
-                if (manual) itensParaAdicionar.push(manual);
+            // Se o livro tem um relacionado (manual <-> caderno), adicionar também
+            if (item.livro_relacionado_id) {
+                const livroRelacionado = catalog.find(livro => livro.id === item.livro_relacionado_id);
+                if (livroRelacionado) {
+                    itensParaAdicionar.push(livroRelacionado);
+                }
             }
 
             setCurrentList(prev => {
@@ -246,7 +234,15 @@ export default function BooksLists({ auth, catalog = [], concelhos = [], escolas
                                                     index={index}
                                                     isRemovable
                                                     showUpdateAlert
-                                                    onRemove={() => setCurrentList(prev => prev.filter(i => i.id !== item.id))}
+                                                    onRemove={() => {
+                                                        setCurrentList(prev => {
+                                                            // Remover o item clicado e o seu livro relacionado (se existir)
+                                                            return prev.filter(i =>
+                                                                i.id !== item.id &&
+                                                                i.id !== item.livro_relacionado_id
+                                                            );
+                                                        });
+                                                    }}
                                                     onPriceChange={(_, value) => {
                                                         setCurrentList(prev => prev.map(it =>
                                                             it.id === item.id ? { ...it, preco: value } : it

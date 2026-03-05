@@ -25,7 +25,10 @@ class CatalogoLivrosController extends Controller
             ->with(['disciplina', 'anoEscolar', 'editora'])
             ->orderBy('disciplina_id')
             ->orderBy('ano_escolar_id')
-            ->orderByRaw("FIELD(tipo, 'manual', 'caderno_atividades')")
+            // Agrupar livros relacionados (manual + caderno) juntos
+            ->orderByRaw('LEAST(id, IFNULL(livro_relacionado_id, id))')
+            // Dentro do grupo, manual primeiro, depois caderno
+            ->orderByRaw("FIELD(tipo, 'MANUAL', 'CADERNO_ATIVIDADES')")
             ->orderBy('titulo');
 
         if ($search) {
@@ -44,10 +47,11 @@ class CatalogoLivrosController extends Controller
             return [
                 'id' => $l->id,
 
-                
+
                 'disciplina_id' => $l->disciplina_id,
                 'ano_escolar_id' => $l->ano_escolar_id,
                 'editora_id' => $l->editora_id,
+                'livro_relacionado_id' => $l->livro_relacionado_id,
 
                 'titulo' => $l->titulo,
                 'tipo' => $l->tipo,
@@ -210,8 +214,15 @@ class CatalogoLivrosController extends Controller
             'editora_id'     => ['required', 'integer', 'exists:editoras,id'],
             'isbn'           => ['required', 'string', 'max:255'],
             'ativo'          => ['required', 'boolean'],
+
+            // Dados do combo (opcionais)
+            'vincular_ca'    => ['sometimes', 'boolean'],
+            'ca_titulo'      => ['required_if:vincular_ca,true', 'string', 'max:255'],
+            'ca_isbn'        => ['required_if:vincular_ca,true', 'string', 'max:255'],
+            'ca_preco'       => ['required_if:vincular_ca,true', 'numeric', 'min:0'],
         ]);
 
+        // Verificar se o ISBN do manual já existe (incluindo deletados)
         $deletedLivro = Livro::withTrashed()
             ->where('isbn', $data['isbn'])
             ->whereNotNull('deleted_at')
@@ -220,24 +231,68 @@ class CatalogoLivrosController extends Controller
         if ($deletedLivro) {
             $deletedLivro->restore();
             $deletedLivro->update(array_merge($data, ['status_alerta' => 0]));
-
-            return redirect()
-                ->route('catalogo.livros.index')
-                ->with('success', 'Livro restaurado e atualizado com sucesso.');
+            $livroManual = $deletedLivro;
+            $mensagem = 'Livro restaurado e atualizado com sucesso.';
+        } else {
+            $livroManual = Livro::create($data);
+            $mensagem = 'Livro criado com sucesso.';
         }
 
-        Livro::create($data);
+        // Se vincular_ca for true, criar também o caderno de atividades
+        if ($request->boolean('vincular_ca')) {
+            $cadernoData = [
+                'titulo'         => $data['ca_titulo'],
+                'disciplina_id'  => $data['disciplina_id'],
+                'ano_escolar_id' => $data['ano_escolar_id'],
+                'tipo'           => 'caderno_atividades',
+                'preco'          => $data['ca_preco'],
+                'editora_id'     => $data['editora_id'],
+                'isbn'           => $data['ca_isbn'],
+                'ativo'          => true,
+            ];
+
+            // Verificar se o ISBN do caderno já existe (incluindo deletados)
+            $deletedCaderno = Livro::withTrashed()
+                ->where('isbn', $cadernoData['isbn'])
+                ->whereNotNull('deleted_at')
+                ->first();
+
+            if ($deletedCaderno) {
+                $deletedCaderno->restore();
+                $deletedCaderno->update(array_merge($cadernoData, ['status_alerta' => 0]));
+                $livroCaderno = $deletedCaderno;
+            } else {
+                $livroCaderno = Livro::create($cadernoData);
+            }
+
+            // Criar relação bidirecional entre manual e caderno
+            $livroManual->update(['livro_relacionado_id' => $livroCaderno->id]);
+            $livroCaderno->update(['livro_relacionado_id' => $livroManual->id]);
+
+            $mensagem = 'Manual e Caderno de Atividades criados e vinculados com sucesso.';
+        }
 
         return redirect()
             ->route('catalogo.livros.index')
-            ->with('success', 'Livro criado com sucesso.');
+            ->with('success', $mensagem);
     }
 
     public function destroy(Livro $livro)
     {
+        // Se o livro tem um relacionado, apagar também
+        $livroRelacionadoId = $livro->livro_relacionado_id;
+
         $livro->delete();
 
+        // Apagar o livro relacionado (se existir)
+        if ($livroRelacionadoId) {
+            $livroRelacionado = Livro::find($livroRelacionadoId);
+            if ($livroRelacionado) {
+                $livroRelacionado->delete();
+            }
+        }
+
         return redirect()->route('catalogo.livros.index')
-            ->with('success', 'Livro removido com sucesso.');
+            ->with('success', 'Livro(s) removido(s) com sucesso.');
     }
 }

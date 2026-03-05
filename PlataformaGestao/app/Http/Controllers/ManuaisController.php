@@ -32,6 +32,7 @@ class ManuaisController extends Controller
         'tipo' => $livro->tipo,
         'disciplina_id' => $livro->disciplina_id,
         'ano_escolar_id' => $livro->ano_escolar_id,
+        'livro_relacionado_id' => $livro->livro_relacionado_id,
         'status_alerta' => $livro->status_alerta,
         'disciplina' => $livro->disciplina ? [
             'id' => $livro->disciplina->id,
@@ -86,6 +87,7 @@ class ManuaisController extends Controller
                         'tipo' => $item->manualLivro->tipo,
                         'disciplina_id' => $item->manualLivro->disciplina_id,
                         'ano_escolar_id' => $item->manualLivro->ano_escolar_id,
+                        'livro_relacionado_id' => $item->manualLivro->livro_relacionado_id,
                         'status_alerta' => $item->manualLivro->status_alerta,
                         'disciplina' => $item->manualLivro->disciplina ? [
                             'id' => $item->manualLivro->disciplina->id,
@@ -104,6 +106,7 @@ class ManuaisController extends Controller
                         'tipo' => $item->cadernoLivro->tipo,
                         'disciplina_id' => $item->cadernoLivro->disciplina_id,
                         'ano_escolar_id' => $item->cadernoLivro->ano_escolar_id,
+                        'livro_relacionado_id' => $item->cadernoLivro->livro_relacionado_id,
                         'status_alerta' => $item->cadernoLivro->status_alerta,
                         'disciplina' => $item->cadernoLivro->disciplina ? [
                             'id' => $item->cadernoLivro->disciplina->id,
