@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\Setting;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -27,13 +28,25 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
-    public function share(Request $request): array
-    {
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
-            ],
-        ];
-    }
+   public function share(Request $request): array
+{
+    return [
+        ...parent::share($request),
+        'auth' => [
+            'user' => $request->user(),
+        ],
+        'flash' => [
+            'success' => fn () => $request->session()->get('success'),
+            'error'   => fn () => $request->session()->get('error'),
+        ],
+        'companySettings' => fn () => [
+            'nome'     => Setting::get('company_nome', 'Papelock'),
+            'morada'   => Setting::get('company_morada', ''),
+            'telefone' => Setting::get('company_telefone', ''),
+            'email'    => Setting::get('company_email', ''),
+            'nif'      => Setting::get('company_nif', ''),
+            'logo_url' => Setting::get('company_logo_url', '/images/Papelock_logo.png'),
+        ],
+    ];
+}
 }
