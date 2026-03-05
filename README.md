@@ -19,8 +19,7 @@ Criar uma plataforma que permita:
 ## 🛠️ Tecnologias Utilizadas
 
 - **Backend:** Laravel 11 (PHP 8.2+)
-- **Frontend:** React.js + Inertia.js (SPA Experience)
-- **Estilização:** Tailwind CSS
+- **Frontend:** React.js
 - **Base de Dados:** MySQL
 - **Gestão:** Jira (Metodologia Ágil)
 
