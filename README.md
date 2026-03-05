@@ -60,11 +60,11 @@ Não é utilizado Confluence; toda a organização é feita dentro do Jira.
 
 ## 🖼️ Demonstração (Screenshots)
 
-| Dashboard Administrativo | Catálogo de Livros |
+| Dashboard Administrativo | Gestão de Listas de Livros |
 | :---: | :---: |
 | <img src="Printscreen/dashboard.png" width="450"> | <img src="Printscreen/lista_livros.png" width="450"> |
 
-| Encomendas de Clientes | Encomendas da Editora |
+| Encomendas de Clientes | Encomendas para a Editora |
 | :---: | :---: |
 | <img src="Printscreen/encomendas_cliente.png" width="450"> | <img src="Printscreen/encomendas_editora.png" width="450"> |
 
