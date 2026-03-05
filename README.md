@@ -58,11 +58,19 @@ Não é utilizado Confluence; toda a organização é feita dentro do Jira.
 
 ---
 
-## 📂 Documentação
+## 🖼️ Demonstração (Screenshots)
 
-A documentação complementar do projeto (análises, requisitos, esquemas, etc.) encontra-se disponível no Google Drive:
+| Dashboard Administrativo | Catálogo de Livros |
+| :---: | :---: |
+| <img src="Printscreen/dashboard.png" width="450"> | <img src="Printscreen/lista_livros.png" width="450"> |
 
-👉 **[Drive com documentação](https://drive.google.com/drive/folders/14GhEvTqk74o4-sPY33GmINVT0DAY_oAB)**
+| Encomendas de Clientes | Encomendas da Editora |
+| :---: | :---: |
+| <img src="Printscreen/encomendas_cliente.png" width="450"> | <img src="Printscreen/encomendas_editora.png" width="450"> |
+
+| Gestão de Stock Dinâmico |
+| :---: |
+| <img src="Printscreen/stock.png" width="450"> |
 
 ---
 
