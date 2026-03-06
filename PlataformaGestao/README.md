@@ -7,6 +7,53 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Docker Setup (This Branch)
+
+This branch is configured to run with:
+
+- Node `v24.13.0` (`node:24.13.0-alpine`)
+- PHP `8.5.0` (`php:8.5.0-fpm`)
+- Laravel `12.47.0` (locked in `composer.lock`)
+
+### 1. Configure `.env`
+
+Use MySQL container values:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=gestao
+DB_USERNAME=root
+DB_PASSWORD=root
+```
+
+Optional (for MySQL root):
+
+```env
+DB_ROOT_PASSWORD=root
+```
+
+### 2. Build and start containers
+
+```bash
+docker compose up -d --build
+```
+
+### 3. Install dependencies and prepare app
+
+```bash
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate
+docker compose exec node npm install
+```
+
+### 4. Access app
+
+- Laravel via Nginx: `http://localhost:8081`
+- Vite dev server: `http://localhost:5173`
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
