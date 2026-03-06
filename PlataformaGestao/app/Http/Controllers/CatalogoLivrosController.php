@@ -174,7 +174,7 @@ class CatalogoLivrosController extends Controller
     {
         $isbn = trim($request->string('isbn')->toString());
 
-        if (strlen($isbn) < 5) {
+        if ($isbn === '') {
             return response()->json(['livro' => null]);
         }
 
@@ -212,14 +212,14 @@ class CatalogoLivrosController extends Controller
             'tipo'           => ['required', Rule::in(['manual', 'caderno_atividades'])],
             'preco'          => ['required', 'numeric', 'min:0'],
             'editora_id'     => ['required', 'integer', 'exists:editoras,id'],
-            'isbn'           => ['required', 'string', 'max:255'],
+            'isbn'           => ['required', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
             'ativo'          => ['required', 'boolean'],
 
             // Dados do combo (opcionais)
-            'vincular_ca'    => ['sometimes', 'boolean'],
-            'ca_titulo'      => ['required_if:vincular_ca,true', 'string', 'max:255'],
-            'ca_isbn'        => ['required_if:vincular_ca,true', 'string', 'max:255'],
-            'ca_preco'       => ['required_if:vincular_ca,true', 'numeric', 'min:0'],
+            'vincular_ca'    => ['nullable', 'boolean'],
+            'ca_titulo'      => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255'],
+            'ca_isbn'        => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
+            'ca_preco'       => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'numeric', 'min:0'],
         ]);
 
         // Verificar se o ISBN do manual já existe (incluindo deletados)
