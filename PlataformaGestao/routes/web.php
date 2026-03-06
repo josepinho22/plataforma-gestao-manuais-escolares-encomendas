@@ -102,15 +102,6 @@ Route::get('/alunos', [AlunosController::class, 'index'])->name('alunos.index');
 Route::post('/alunos', [AlunosController::class, 'store'])->name('alunos.store');
 Route::put('/alunos/{aluno}', [AlunosController::class, 'update'])->name('alunos.update');
 });
-// Rotas para stock
-Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
-Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
-Route::post('/stock/add', [StockController::class, 'add'])->name('stock.add');
-
-// Livros - search endpoint (AJAX)
-Route::get('/livros/search', [LivroController::class, 'search'])->name('livros.search');
-
-
 Route::middleware('auth')->group(function () {
     // Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -120,41 +111,46 @@ Route::middleware('auth')->group(function () {
     // Dados da empresa
     Route::patch('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
 });
-// 2. Rotas Protegidas (Todas as rotas do Papelix devem estar aqui dentro)
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    
 
+    // ---------- STOCK ----------
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::post('/stock/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+    Route::post('/stock/add', [StockController::class, 'add'])->name('stock.add');
 
-    // Catálogo (Nome exato exigido pela Sidebar)
-    //Route::get('/catalogo/livros', [LivroController::class, 'index'])->name('catalogo.livros.index');
+    // Livros - search endpoint (AJAX)
+    Route::get('/livros/search', [LivroController::class, 'search'])->name('livros.search');
+
+    // ---------- MANUAIS ----------
     Route::get('/manuais-list', [ManuaisController::class, 'index'])->name('manuais.index');
     Route::get('/api/get-lista-manuais', [ManuaisController::class, 'getListaBooks'])->name('api.lista.manuais');
     Route::post('/manuais-list', [ManuaisController::class, 'store'])->name('manuais-lists.store');
-    });
 
     // ---------- GESTÃO (Concelhos + Editoras) ----------
-Route::get('/gestao', function () {
-    return \Inertia\Inertia::render('Gestao/Index');
-})->name('gestao.index');
+    Route::get('/gestao', function () {
+        return \Inertia\Inertia::render('Gestao/Index');
+    })->name('gestao.index');
 
-Route::get('/concelhos', [\App\Http\Controllers\ConcelhosController::class, 'index'])->name('concelhos.index');
-Route::post('/concelhos', [\App\Http\Controllers\ConcelhosController::class, 'store'])->name('concelhos.store');
-Route::put('/concelhos/{concelho}', [\App\Http\Controllers\ConcelhosController::class, 'update'])->name('concelhos.update');
-Route::delete('/concelhos/{concelho}', [\App\Http\Controllers\ConcelhosController::class, 'destroy'])->name('concelhos.destroy');
+    Route::get('/concelhos', [\App\Http\Controllers\ConcelhosController::class, 'index'])->name('concelhos.index');
+    Route::post('/concelhos', [\App\Http\Controllers\ConcelhosController::class, 'store'])->name('concelhos.store');
+    Route::put('/concelhos/{concelho}', [\App\Http\Controllers\ConcelhosController::class, 'update'])->name('concelhos.update');
+    Route::delete('/concelhos/{concelho}', [\App\Http\Controllers\ConcelhosController::class, 'destroy'])->name('concelhos.destroy');
 
-Route::get('/editoras', [\App\Http\Controllers\EditorasController::class, 'index'])->name('editoras.index');
-Route::post('/editoras', [\App\Http\Controllers\EditorasController::class, 'store'])->name('editoras.store');
-Route::put('/editoras/{editora}', [\App\Http\Controllers\EditorasController::class, 'update'])->name('editoras.update');
-Route::delete('/editoras/{editora}', [\App\Http\Controllers\EditorasController::class, 'destroy'])->name('editoras.destroy');
+    Route::get('/editoras', [\App\Http\Controllers\EditorasController::class, 'index'])->name('editoras.index');
+    Route::post('/editoras', [\App\Http\Controllers\EditorasController::class, 'store'])->name('editoras.store');
+    Route::put('/editoras/{editora}', [\App\Http\Controllers\EditorasController::class, 'update'])->name('editoras.update');
+    Route::delete('/editoras/{editora}', [\App\Http\Controllers\EditorasController::class, 'destroy'])->name('editoras.destroy');
 
-Route::post('/disciplinas', [\App\Http\Controllers\DisciplinasController::class, 'store'])->name('disciplinas.store');
-Route::put('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'update'])->name('disciplinas.update');
-Route::delete('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'destroy'])->name('disciplinas.destroy');
+    Route::post('/disciplinas', [\App\Http\Controllers\DisciplinasController::class, 'store'])->name('disciplinas.store');
+    Route::put('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'update'])->name('disciplinas.update');
+    Route::delete('/disciplinas/{disciplina}', [\App\Http\Controllers\DisciplinasController::class, 'destroy'])->name('disciplinas.destroy');
 
-Route::post('/anos-letivos/avancar', [\App\Http\Controllers\AnosLetivosController::class, 'avancar'])->name('anos-letivos.avancar');
-Route::post('/anos-letivos', [\App\Http\Controllers\AnosLetivosController::class, 'store'])->name('anos-letivos.store');
-Route::put('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'update'])->name('anos-letivos.update');
-Route::delete('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'destroy'])->name('anos-letivos.destroy');
+    Route::post('/anos-letivos/avancar', [\App\Http\Controllers\AnosLetivosController::class, 'avancar'])->name('anos-letivos.avancar');
+    Route::post('/anos-letivos', [\App\Http\Controllers\AnosLetivosController::class, 'store'])->name('anos-letivos.store');
+    Route::put('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'update'])->name('anos-letivos.update');
+    Route::delete('/anos-letivos/{anoLetivo}', [\App\Http\Controllers\AnosLetivosController::class, 'destroy'])->name('anos-letivos.destroy');
+});
 
 
 require __DIR__ . '/auth.php';

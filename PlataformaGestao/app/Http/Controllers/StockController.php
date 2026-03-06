@@ -96,7 +96,7 @@ class StockController extends Controller
         // Fetch dropdown options
         $disciplinas = Disciplina::orderBy('nome')->get(['id', 'nome']);
         $editoras = Editora::orderBy('nome')->get(['id', 'nome']);
-        $anosEscolares = AnoEscolar::orderBy('name')->get(['id', 'name']);
+        $anosEscolares = AnoEscolar::orderBy('id')->get(['id', 'name']);
 
         return Inertia::render('Stock/Index', [
             'items' => $items,

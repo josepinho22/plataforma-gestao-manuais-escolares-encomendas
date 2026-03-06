@@ -12,12 +12,12 @@ export default function Dashboard({ auth, stats = {}, anosLetivos = [], encapado
         { label: 'Aguarda Livros',       value: stats.aguardaLivros       ?? 0, icon: <FaExclamationTriangle />, color: 'border-red-500 text-red-600',       btnColor: 'bg-red-600',    href: route("orders.clientes.index", { status: 'AGUARDA_LIVROS',       sort: 'asc' }) },
         { label: 'Aguarda Ensacamento',  value: stats.aguardaEnsacamento  ?? 0, icon: <FaFileAlt />,             color: 'border-yellow-500 text-yellow-600', btnColor: 'bg-yellow-500', href: route("orders.clientes.index", { status: 'AGUARDA_ENSACAMENTO',  sort: 'asc' }) },
         { label: 'Aguarda Encapamento',  value: stats.aguardaEncapamento  ?? 0, icon: <FaBoxOpen />,             color: 'border-orange-500 text-orange-600', btnColor: 'bg-orange-600', href: route("orders.clientes.index", { status: 'AGUARDA_ENCAPAMENTO',  sort: 'asc' }) },
-        { label: 'Aguarda Levantamento', value: stats.aguardaLevantamento ?? 0, icon: <FaCheckCircle />,         color: 'border-green-500 text-green-600',   btnColor: 'bg-green-600',  href: route("orders.clientes.index", { status: 'AGUARDA_LEVANTAMENTO', sort: 'asc' }) },
+        { label: 'Aguarda Levantamento', value: stats.aguardaLevantamento ?? 0, icon: <FaCheckCircle />,         color: 'border-purple-400 text-purple-500',   btnColor: 'bg-purple-500',  href: route("orders.clientes.index", { status: 'AGUARDA_LEVANTAMENTO', sort: 'asc' }) },
     ];
 
     const publisherStats = [
         { label: 'Solicitado',      value: stats.paraEncomendar ?? 0, icon: <FaClipboardList />, color: 'border-blue-400 text-blue-500',   btnColor: 'bg-blue-500',   href: route("orders.editora.index", { status: 'SOLICITADO' }) },
-        { label: 'Entrega Parcial', value: stats.encomendadas   ?? 0, icon: <FaTruck />,         color: 'border-purple-400 text-purple-500', btnColor: 'bg-purple-500', href: route("orders.editora.index", { status: 'ENTREGA_PARCIAL' }) },
+        { label: 'Entrega Parcial', value: stats.encomendadas   ?? 0, icon: <FaTruck />,         color: 'border-orange-400 text-orange-600', btnColor: 'bg-orange-400', href: route("orders.editora.index", { status: 'ENTREGA_PARCIAL' }) },
     ];
 
     return (

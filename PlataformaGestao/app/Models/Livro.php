@@ -19,6 +19,7 @@ class Livro extends Model
         'editora_id',
         'disciplina_id',
         'ano_escolar_id',
+        'livro_relacionado_id',
         'tipo',
         'titulo',
         'isbn',
@@ -32,6 +33,24 @@ class Livro extends Model
         'preco' => 'decimal:2',
         'ativo' => 'boolean',
     ];
+
+    /**
+     * Mutator para o campo tipo
+     * Converte para maiúsculas para garantir consistência com a base de dados
+     */
+    public function setTipoAttribute($value)
+    {
+        $this->attributes['tipo'] = strtoupper($value);
+    }
+
+    /**
+     * Accessor para o campo tipo
+     * Retorna em minúsculas para consistência com o frontend
+     */
+    public function getTipoAttribute($value)
+    {
+        return strtolower($value);
+    }
 
     public function editora(): BelongsTo
     {
@@ -76,5 +95,13 @@ class Livro extends Model
     public function alocacoesStock(): HasMany
     {
         return $this->hasMany(AlocacaoStock::class);
+    }
+
+    /**
+     * Livro relacionado (ex: manual relacionado com caderno de atividades)
+     */
+    public function livroRelacionado(): BelongsTo
+    {
+        return $this->belongsTo(Livro::class, 'livro_relacionado_id');
     }
 }

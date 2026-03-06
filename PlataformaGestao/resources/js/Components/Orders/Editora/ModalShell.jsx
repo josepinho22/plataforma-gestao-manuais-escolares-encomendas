@@ -3,7 +3,10 @@ import { FaTimes } from "react-icons/fa";
 
 export default function ModalShell({ title, children, onClose, size = "md" }) {
   const sizeClass =
-    size === "lg" ? "max-w-4xl" : size === "sm" ? "max-w-lg" : "max-w-2xl";
+    size === "3xl" ? "max-w-6xl" :
+    size === "lg" ? "max-w-4xl" :
+    size === "sm" ? "max-w-lg" :
+    "max-w-2xl";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

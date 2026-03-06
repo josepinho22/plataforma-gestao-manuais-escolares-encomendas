@@ -945,7 +945,7 @@ class OrderController extends Controller
                     'isbn' => $livro->isbn,
                     'preco' => (float) $livro->preco,
                     'editora_nome' => $livro->editora?->nome ?? 'N/A',
-                    'tipo' => $livro->tipo === 'MANUAL' ? 'Manual' : 'Caderno',
+                    'tipo' => $livro->tipo === 'manual' ? 'Manual' : 'Caderno',
                 ];
             });
 
