@@ -9,6 +9,7 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
     const [history, setHistory] = useState([]);
     const [activeTab, setActiveTab] = useState('items');
     const [deleting, setDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [bulkLoading, setBulkLoading] = useState(false);
     const [modalClosing, setModalClosing] = useState(false);
 
@@ -264,8 +265,10 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
     };
 
     // Eliminar encomenda
-    const handleDelete = async () => {
-        if (!confirm('Tem a certeza que pretende eliminar esta encomenda? Esta ação não pode ser desfeita.')) return;
+    const handleDelete = () => setShowDeleteConfirm(true);
+
+    const confirmDelete = async () => {
+        setShowDeleteConfirm(false);
         setDeleting(true);
         try {
             await axios.delete(`/api/orders/${order.id}`);
@@ -560,6 +563,7 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
     const hasEncaparItems = order.items.some(i => i.encapar);
 
     return (
+        <>
         <div
             className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${modalClosing ? '' : 'animate-backdrop-in'}`}
             style={{ background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}
@@ -902,5 +906,38 @@ export default function OrderDetailsModal({ order: initialOrder, onClose, onSave
                 </div>
             </div>
         </div>
+
+        {/* Modal de confirmação de eliminação */}
+        {showDeleteConfirm && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+                <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 text-red-600">
+                            <FaTrash size={16} />
+                        </div>
+                        <h3 className="text-base font-black text-gray-900">Eliminar encomenda</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                        Tens a certeza que queres eliminar esta encomenda? Esta ação não pode ser desfeita.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-1">
+                        <button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-sm font-black transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={confirmDelete}
+                            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-black transition-all"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }
