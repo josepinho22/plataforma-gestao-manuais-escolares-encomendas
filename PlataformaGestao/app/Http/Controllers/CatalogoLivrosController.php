@@ -59,6 +59,7 @@ class CatalogoLivrosController extends Controller
                 'ano' => $this->displayAnoEscolar($l->anoEscolar),
                 'editora' => $l->editora?->nome ?? '—',
                 'isbn' => $l->isbn ?? '—',
+                'codigo_interno' => $l->codigo_interno ?? null,
                 'preco' => (float) ($l->preco ?? 0),
                 'ativo' => (bool) ($l->ativo ?? false),
                 'updated_at' => optional($l->updated_at)->format('d/m/Y') ?? '—',
@@ -146,13 +147,14 @@ class CatalogoLivrosController extends Controller
     public function update(Request $request, Livro $livro)
     {
         $data = $request->validate([
-            'titulo' => ['required', 'string', 'max:255'],
-            'disciplina_id' => ['required', 'integer', 'exists:disciplinas,id'],
+            'titulo'         => ['required', 'string', 'max:255'],
+            'disciplina_id'  => ['required', 'integer', 'exists:disciplinas,id'],
             'ano_escolar_id' => ['nullable', 'integer', 'exists:anos_escolares,id'],
-            'tipo' => ['required', Rule::in(['manual', 'caderno_atividades'])],
-            'preco' => ['required', 'numeric', 'min:0'],
-            'editora_id' => ['required', 'integer', 'exists:editoras,id'],
-            'isbn' => ['nullable', 'string', 'max:255'],
+            'tipo'           => ['required', Rule::in(['manual', 'caderno_atividades'])],
+            'preco'          => ['required', 'numeric', 'min:0'],
+            'editora_id'     => ['required', 'integer', 'exists:editoras,id'],
+            'isbn'           => ['nullable', 'string', 'max:255'],
+            'codigo_interno' => ['nullable', 'string', 'max:255'],
         ]);
 
         $livro->update(array_merge($data, ['status_alerta' => 0]));
@@ -206,20 +208,22 @@ class CatalogoLivrosController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'titulo'         => ['required', 'string', 'max:255'],
-            'disciplina_id'  => ['required', 'integer', 'exists:disciplinas,id'],
-            'ano_escolar_id' => ['nullable', 'integer', 'exists:anos_escolares,id'],
-            'tipo'           => ['required', Rule::in(['manual', 'caderno_atividades'])],
-            'preco'          => ['required', 'numeric', 'min:0'],
-            'editora_id'     => ['required', 'integer', 'exists:editoras,id'],
-            'isbn'           => ['required', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
-            'ativo'          => ['required', 'boolean'],
+            'titulo'          => ['required', 'string', 'max:255'],
+            'disciplina_id'   => ['required', 'integer', 'exists:disciplinas,id'],
+            'ano_escolar_id'  => ['nullable', 'integer', 'exists:anos_escolares,id'],
+            'tipo'            => ['required', Rule::in(['manual', 'caderno_atividades'])],
+            'preco'           => ['required', 'numeric', 'min:0'],
+            'editora_id'      => ['required', 'integer', 'exists:editoras,id'],
+            'isbn'            => ['required', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
+            'codigo_interno'  => ['nullable', 'string', 'max:255'],
+            'ativo'           => ['required', 'boolean'],
 
             // Dados do combo (opcionais)
-            'vincular_ca'    => ['nullable', 'boolean'],
-            'ca_titulo'      => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255'],
-            'ca_isbn'        => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
-            'ca_preco'       => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'numeric', 'min:0'],
+            'vincular_ca'        => ['nullable', 'boolean'],
+            'ca_titulo'          => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255'],
+            'ca_isbn'            => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'string', 'max:255', Rule::unique('livros', 'isbn')->whereNull('deleted_at')],
+            'ca_preco'           => [Rule::requiredIf($request->boolean('vincular_ca')), 'nullable', 'numeric', 'min:0'],
+            'ca_codigo_interno'  => ['nullable', 'string', 'max:255'],
         ]);
 
         // Verificar se o ISBN do manual já existe (incluindo deletados)
@@ -241,14 +245,15 @@ class CatalogoLivrosController extends Controller
         // Se vincular_ca for true, criar também o caderno de atividades
         if ($request->boolean('vincular_ca')) {
             $cadernoData = [
-                'titulo'         => $data['ca_titulo'],
-                'disciplina_id'  => $data['disciplina_id'],
-                'ano_escolar_id' => $data['ano_escolar_id'],
-                'tipo'           => 'caderno_atividades',
-                'preco'          => $data['ca_preco'],
-                'editora_id'     => $data['editora_id'],
-                'isbn'           => $data['ca_isbn'],
-                'ativo'          => true,
+                'titulo'          => $data['ca_titulo'],
+                'disciplina_id'   => $data['disciplina_id'],
+                'ano_escolar_id'  => $data['ano_escolar_id'],
+                'tipo'            => 'caderno_atividades',
+                'preco'           => $data['ca_preco'],
+                'editora_id'      => $data['editora_id'],
+                'isbn'            => $data['ca_isbn'],
+                'codigo_interno'  => $data['ca_codigo_interno'] ?? null,
+                'ativo'           => true,
             ];
 
             // Verificar se o ISBN do caderno já existe (incluindo deletados)

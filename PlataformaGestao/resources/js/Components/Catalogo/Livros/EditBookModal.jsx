@@ -28,6 +28,7 @@ export default function EditBookModal({
     preco: "",
     editora_id: "",
     isbn: "",
+    codigo_interno: "",
   });
 
   const [isbnMatch, setIsbnMatch] = React.useState(null);
@@ -45,6 +46,7 @@ export default function EditBookModal({
       preco: book.preco ?? "",
       editora_id: book.editora_id || "",
       isbn: book.isbn || "",
+      codigo_interno: book.codigo_interno || "",
     });
     setIsbnMatch(null);
   }, [open, book?.id]);
@@ -272,6 +274,22 @@ export default function EditBookModal({
                 O livro <strong>"{isbnMatch.titulo}"</strong> foi anteriormente eliminado. Usar este ISBN irá restaurá-lo.
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Código Interno da Editora */}
+        <div>
+          <label className="block text-sm font-black text-gray-900 mb-2">
+            Cód. Interno Editora <span className="text-gray-400 font-medium text-xs">(opcional)</span>
+          </label>
+          <input
+            value={form.data.codigo_interno}
+            onChange={(e) => form.setData("codigo_interno", e.target.value)}
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
+            placeholder="Ex: ED-2025-001"
+          />
+          {form.errors.codigo_interno && (
+            <p className="text-xs text-red-600 mt-1">{form.errors.codigo_interno}</p>
           )}
         </div>
 

@@ -22,13 +22,15 @@ export default function NewBookModal({ open, onClose, filters, onCreated }) {
     preco: "",
     editora_id: "",
     isbn: "",
+    codigo_interno: "",
     ativo: true,
-   
+
     // Dados do Caderno (Enviados apenas se isCombo for true)
     vincular_ca: false,
     ca_titulo: "",
     ca_isbn: "",
     ca_preco: "",
+    ca_codigo_interno: "",
   });
  
   const [isbnMatch, setIsbnMatch] = React.useState(null);
@@ -256,6 +258,21 @@ export default function NewBookModal({ open, onClose, filters, onCreated }) {
               />
               {form.errors.titulo && <p className="text-xs text-red-600 mt-1">{form.errors.titulo}</p>}
             </div>
+
+            {/* Código Interno da Editora */}
+            <div>
+              <label className="block text-xs font-black text-gray-700 mb-1 ml-1">
+                {isCombo ? 'CÓD. INTERNO EDITORA (MANUAL)' : 'CÓD. INTERNO EDITORA'}
+                <span className="ml-1 text-gray-400 font-medium">(opcional)</span>
+              </label>
+              <input
+                value={form.data.codigo_interno}
+                onChange={(e) => form.setData("codigo_interno", e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
+                placeholder="Ex: ED-2025-001"
+              />
+              {form.errors.codigo_interno && <p className="text-xs text-red-600 mt-1">{form.errors.codigo_interno}</p>}
+            </div>
  
             {/* Tipo - só aparece quando NÃO está em modo combo */}
             {!isCombo && (
@@ -413,6 +430,20 @@ export default function NewBookModal({ open, onClose, filters, onCreated }) {
                   className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                 />
                 {form.errors.ca_preco && <p className="text-xs text-red-600 mt-1">{form.errors.ca_preco}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-blue-900 mb-1 ml-1">
+                  CÓD. INTERNO EDITORA (CADERNO)
+                  <span className="ml-1 text-blue-400 font-medium">(opcional)</span>
+                </label>
+                <input
+                  value={form.data.ca_codigo_interno}
+                  onChange={(e) => form.setData("ca_codigo_interno", e.target.value)}
+                  className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Ex: ED-2025-002"
+                />
+                {form.errors.ca_codigo_interno && <p className="text-xs text-red-600 mt-1">{form.errors.ca_codigo_interno}</p>}
               </div>
 
               <div className="p-3 bg-white/60 rounded-xl border border-blue-100 mt-4">
