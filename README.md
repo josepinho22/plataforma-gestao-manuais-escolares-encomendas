@@ -18,76 +18,34 @@ Criar uma plataforma que permita:
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Backend:** Laravel
-- **Frontend:** Blade + Bootstrap
-- **Base de Dados:** Em análise
-- **Gestão de Projeto:** Jira
-- **Controlo de Versões:** Git + GitHub
+- **Backend:** Laravel 11 (PHP 8.2+)
+- **Frontend:** React.js
+- **Base de Dados:** MySQL
+- **Gestão:** Jira (Metodologia Ágil)
 
 ---
 
-## 🧱 Estrutura do Repositório
+## 🖼️ Demonstração (Screenshots)
 
-O repositório segue a estrutura padrão de um projeto Laravel:
+| Dashboard Administrativo | Gestão de Listas de Livros |
+| :---: | :---: |
+| <img src="Printscreen/dashboard.png" width="450"> | <img src="Printscreen/lista_livros.png" width="450"> |
 
----
+| Encomendas de Clientes | Encomendas para a Editora |
+| :---: | :---: |
+| <img src="Printscreen/encomendas_cliente.png" width="450"> | <img src="Printscreen/encomendas_editora.png" width="450"> |
 
-## 🌱 Workflow de Desenvolvimento
-
-- `main` → branch estável (merge final do projeto)
-- `teste` → branch de integração
-- branches individuais por membro da equipa, derivadas de `teste`
-
-Fluxo:
-1. Cada membro trabalha na sua branch
-2. Merge para `teste` quando a funcionalidade está funcional
-3. Merge final para `main` feito pelo team leader
-
----
-
-## 📋 Gestão de Tarefas
-
-A gestão do projeto é feita exclusivamente através do **Jira**, utilizando:
-
-- Epics
-- Stories
-- Tasks
-- Bug fixes
-
-Não é utilizado Confluence; toda a organização é feita dentro do Jira.
-
----
-
-## 📂 Documentação
-
-A documentação complementar do projeto (análises, requisitos, esquemas, etc.) encontra-se disponível no Google Drive:
-
-👉 **[Drive com documentação](https://drive.google.com/drive/folders/14GhEvTqk74o4-sPY33GmINVT0DAY_oAB)**
+| Gestão de Stock Dinâmico |
+| :---: |
+| <img src="Printscreen/stock.png" width="450"> |
 
 ---
 
 ## 👥 Autores
 
-Projeto desenvolvido por:
+<div align="center">
 
-* <a href="https://github.com/josepinho22"><img align="left" src="https://avatars.githubusercontent.com/josepinho22?size=100" width="50"></a>
-**[José Pinho](https://github.com/josepinho22)**
-<br><br/>
+| [<img src="https://avatars.githubusercontent.com/josepinho22?size=150" width="100"><br><sub><b>José Pinho</b></sub>](https://github.com/josepinho22) | [<img src="https://avatars.githubusercontent.com/joaodias23?size=150" width="100"><br><sub><b>João Dias</b></sub>](https://github.com/joaodias23) | [<img src="https://avatars.githubusercontent.com/MayaraSampaio?size=150" width="100"><br><sub><b>Mayara Sampaio</b></sub>](https://github.com/MayaraSampaio) | [<img src="https://avatars.githubusercontent.com/thaisliira?size=150" width="100"><br><sub><b>Thais Lira</b></sub>](https://github.com/thaisliira) |
+| :---: | :---: | :---: | :---: |
 
-* <a href="https://github.com/joaodias23"><img align="left" src="https://avatars.githubusercontent.com/joaodias23?size=100" width="50"></a>
-**[João Dias](https://github.com/joaodias23)**
-<br><br/>
-
-* <a href="https://github.com/MayaraSampaio"><img align="left" src="https://avatars.githubusercontent.com/MayaraSampaio?size=100" width="50"></a>
-**[Mayara Sampaio](https://github.com/MayaraSampaio)**
-<br><br/>
-
-* <a href="https://github.com/thaisliira"><img align="left" src="https://avatars.githubusercontent.com/thaisliira?size=100" width="50"></a>
-**[Thais Lira](https://github.com/thaisliira)**
-<br><br/>
-
----
-
-## 📌 Notas
-
-Este README será atualizado à medida que o projeto evoluir e novas funcionalidades forem implementadas.
+</div>
