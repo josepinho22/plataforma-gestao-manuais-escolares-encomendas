@@ -28,7 +28,12 @@ export default function EditBookModal({
     preco: "",
     editora_id: "",
     isbn: "",
+    codigo_interno: "",
   });
+
+  const [isbnMatch, setIsbnMatch] = React.useState(null);
+  const [isbnLoading, setIsbnLoading] = React.useState(false);
+  const isbnTimerRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!open || !book) return;
@@ -41,8 +46,45 @@ export default function EditBookModal({
       preco: book.preco ?? "",
       editora_id: book.editora_id || "",
       isbn: book.isbn || "",
+      codigo_interno: book.codigo_interno || "",
     });
+    setIsbnMatch(null);
   }, [open, book?.id]);
+
+  const checkIsbn = async (value) => {
+    if (!value || !value.trim()) return;
+    setIsbnLoading(true);
+    try {
+      const res  = await fetch(route("catalogo.livros.checkIsbn") + "?isbn=" + encodeURIComponent(value.trim()));
+      const json = await res.json();
+      if (json.livro && json.livro.id !== book?.id) {
+        setIsbnMatch(json.livro);
+      } else {
+        setIsbnMatch(null);
+      }
+    } catch {
+      setIsbnMatch(null);
+    } finally {
+      setIsbnLoading(false);
+    }
+  };
+
+  const handleIsbnChange = (value) => {
+    form.setData("isbn", value);
+    setIsbnMatch(null);
+    clearTimeout(isbnTimerRef.current);
+    if (!value.trim()) {
+      setIsbnLoading(false);
+      return;
+    }
+    setIsbnLoading(true);
+    isbnTimerRef.current = setTimeout(() => checkIsbn(value), 500);
+  };
+
+  const handleIsbnBlur = (value) => {
+    clearTimeout(isbnTimerRef.current);
+    checkIsbn(value);
+  };
 
   if (!open || !book) return null;
 
@@ -204,14 +246,50 @@ export default function EditBookModal({
           <label className="block text-sm font-black text-gray-900 mb-2">
             ISBN <span className="text-red-600">*</span>
           </label>
-          <input
-            required
-            value={form.data.isbn}
-            onChange={(e) => form.setData("isbn", e.target.value)}
-            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
-          />
+          <div className="relative">
+            <input
+              required
+              value={form.data.isbn}
+              onChange={(e) => handleIsbnChange(e.target.value)}
+              onBlur={(e) => handleIsbnBlur(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
+            />
+            {isbnLoading && <span className="absolute right-3 top-3.5 text-gray-400 animate-spin text-xs">⟳</span>}
+          </div>
           {form.errors.isbn && (
             <p className="text-xs text-red-600 mt-1">{form.errors.isbn}</p>
+          )}
+          {isbnMatch && !isbnMatch.deleted && (
+            <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+              <p className="text-xs text-red-700 font-semibold leading-snug">
+                Este ISBN já está associado ao livro <strong>"{isbnMatch.titulo}"</strong>. Não é possível usar este ISBN.
+              </p>
+            </div>
+          )}
+          {isbnMatch && isbnMatch.deleted && (
+            <div className="flex items-start gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <span className="text-amber-500 font-black text-sm mt-0.5">↺</span>
+              <p className="text-xs text-amber-700 font-semibold leading-snug">
+                O livro <strong>"{isbnMatch.titulo}"</strong> foi anteriormente eliminado. Usar este ISBN irá restaurá-lo.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Código Interno da Editora */}
+        <div>
+          <label className="block text-sm font-black text-gray-900 mb-2">
+            Cód. Interno Editora <span className="text-gray-400 font-medium text-xs">(opcional)</span>
+          </label>
+          <input
+            value={form.data.codigo_interno}
+            onChange={(e) => form.setData("codigo_interno", e.target.value)}
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-black"
+            placeholder="Ex: ED-2025-001"
+          />
+          {form.errors.codigo_interno && (
+            <p className="text-xs text-red-600 mt-1">{form.errors.codigo_interno}</p>
           )}
         </div>
 
@@ -225,7 +303,7 @@ export default function EditBookModal({
           </button>
           <button
             type="submit"
-            disabled={form.processing}
+            disabled={form.processing || (isbnMatch && !isbnMatch.deleted)}
             className="px-5 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white font-black"
           >
             Atualizar

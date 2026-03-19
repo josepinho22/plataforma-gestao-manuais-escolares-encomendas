@@ -8,114 +8,124 @@ use App\Models\Escola;
 use App\Models\AnoLetivo;
 use App\Models\AnoEscolar;
 use App\Models\Livro;
+use App\Models\Editora;
 use Illuminate\Database\Seeder;
 
 class ListaLivroSeeder extends Seeder
 {
+    /**
+     * Editora fixa por escola — todos os livros de uma lista são da mesma editora.
+     */
+    private const EDITORA_POR_ESCOLA = [
+        'Escola Básica João de Deus'             => 'Porto Editora',
+        'Escola Básica de Gaia'                  => 'Texto Editores',
+        'Escola Básica de Matosinhos'            => 'Leya Educação',
+        'Escola Básica da Maia'                  => 'Areal Editores',
+        'Escola Básica de Gondomar'              => 'Santillana',
+        'Escola Secundária Rodrigues de Freitas' => 'Porto Editora',
+        'Escola Secundária de Gaia'              => 'Texto Editores',
+        'Escola Secundária de Matosinhos'        => 'Leya Educação',
+        'Escola Secundária da Maia'              => 'Areal Editores',
+        'Escola Secundária de Gondomar'          => 'Santillana',
+    ];
+
+    private const ANOS_BASICO    = ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano', '6º Ano'];
+    private const ANOS_SECUNDARIO = ['7º Ano', '8º Ano', '9º Ano', '10º Ano', '11º Ano', '12º Ano'];
+
+    private const ESCOLAS_BASICAS = [
+        'Escola Básica João de Deus',
+        'Escola Básica de Gaia',
+        'Escola Básica de Matosinhos',
+        'Escola Básica da Maia',
+        'Escola Básica de Gondomar',
+    ];
+
+    private const ESCOLAS_SECUNDARIAS = [
+        'Escola Secundária Rodrigues de Freitas',
+        'Escola Secundária de Gaia',
+        'Escola Secundária de Matosinhos',
+        'Escola Secundária da Maia',
+        'Escola Secundária de Gondomar',
+    ];
+
     public function run(): void
     {
         $anoLetivo = AnoLetivo::where('nome', '2025/2026')->first();
-
         if (! $anoLetivo) {
             return;
         }
 
-        $escolas = Escola::where('isAtivo', true)->get()->keyBy('nome');
+        $escolas  = Escola::where('isAtivo', true)->get()->keyBy('nome');
+        $editoras = Editora::all()->keyBy('nome');
 
-        // Escolas Básicas: cobrem 1º–6º Ano
-        $escolasBasicas = [
-            'Escola Básica João de Deus',
-            'Escola Básica de Gaia',
-            'Escola Básica de Matosinhos',
-            'Escola Básica da Maia',
-            'Escola Básica de Gondomar',
+        $grupos = [
+            ['escolas' => self::ESCOLAS_BASICAS,     'anos' => self::ANOS_BASICO],
+            ['escolas' => self::ESCOLAS_SECUNDARIAS, 'anos' => self::ANOS_SECUNDARIO],
         ];
-        $anosEB = ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano', '6º Ano'];
 
-        // Escolas Secundárias: cobrem 7º–12º Ano
-        $escolasSecundarias = [
-            'Escola Secundária Rodrigues de Freitas',
-            'Escola Secundária de Gaia',
-            'Escola Secundária de Matosinhos',
-            'Escola Secundária da Maia',
-            'Escola Secundária de Gondomar',
-        ];
-        $anosES = ['7º Ano', '8º Ano', '9º Ano', '10º Ano', '11º Ano', '12º Ano'];
-
-        foreach ($escolasBasicas as $escolaNome) {
-            $escola = $escolas[$escolaNome] ?? null;
-            if (! $escola) {
-                continue;
-            }
-            foreach ($anosEB as $anoNome) {
-                $anoEscolar = AnoEscolar::where('name', $anoNome)->first();
-                if (! $anoEscolar) {
+        foreach ($grupos as ['escolas' => $escolasGrupo, 'anos' => $anosGrupo]) {
+            foreach ($escolasGrupo as $escolaNome) {
+                $escola = $escolas[$escolaNome] ?? null;
+                if (! $escola) {
                     continue;
                 }
-                $lista = ListaLivro::create([
-                    'escola_id'      => $escola->id,
-                    'ano_letivo_id'  => $anoLetivo->id,
-                    'ano_escolar_id' => $anoEscolar->id,
-                ]);
-                $this->criarItens($lista, $anoEscolar->id);
-            }
-        }
 
-        foreach ($escolasSecundarias as $escolaNome) {
-            $escola = $escolas[$escolaNome] ?? null;
-            if (! $escola) {
-                continue;
-            }
-            foreach ($anosES as $anoNome) {
-                $anoEscolar = AnoEscolar::where('name', $anoNome)->first();
-                if (! $anoEscolar) {
+                $editoraNome = self::EDITORA_POR_ESCOLA[$escolaNome] ?? null;
+                $editora     = $editoraNome ? ($editoras[$editoraNome] ?? null) : null;
+                if (! $editora) {
                     continue;
                 }
-                $lista = ListaLivro::create([
-                    'escola_id'      => $escola->id,
-                    'ano_letivo_id'  => $anoLetivo->id,
-                    'ano_escolar_id' => $anoEscolar->id,
-                ]);
-                $this->criarItens($lista, $anoEscolar->id);
+
+                foreach ($anosGrupo as $anoNome) {
+                    $anoEscolar = AnoEscolar::where('name', $anoNome)->first();
+                    if (! $anoEscolar) {
+                        continue;
+                    }
+
+                    $lista = ListaLivro::create([
+                        'escola_id'      => $escola->id,
+                        'ano_letivo_id'  => $anoLetivo->id,
+                        'ano_escolar_id' => $anoEscolar->id,
+                    ]);
+
+                    $this->criarItens($lista, $anoEscolar->id, $editora->id);
+                }
             }
         }
     }
 
     /**
-     * Cria os itens da lista, escolhendo um manual por disciplina.
-     * O índice usa escola_id para garantir que escolas diferentes escolhem
-     * editoras diferentes para o mesmo ano/disciplina.
+     * Cria os itens da lista usando apenas livros da editora atribuída à escola.
+     * Para cada disciplina: associa o manual e, se existir, o caderno de atividades ligado.
      */
-    private function criarItens(ListaLivro $lista, int $anoEscolarId): void
+    private function criarItens(ListaLivro $lista, int $anoEscolarId, int $editoraId): void
     {
-        $livros = Livro::where('ano_escolar_id', $anoEscolarId)
+        $manuais = Livro::where('ano_escolar_id', $anoEscolarId)
+            ->where('editora_id', $editoraId)
+            ->where('tipo', 'MANUAL')
             ->where('ativo', true)
             ->get();
 
-        if ($livros->isEmpty()) {
+        if ($manuais->isEmpty()) {
             return;
         }
 
-        foreach ($livros->groupBy('disciplina_id') as $disciplinaId => $livrosDisciplina) {
-            $manuais  = $livrosDisciplina->where('tipo', 'MANUAL')->values();
-            $cadernos = $livrosDisciplina->where('tipo', 'CADERNO_ATIVIDADES')->values();
+        // Indexar cadernos pelo manual a que pertencem (livro_relacionado_id)
+        $cadernosIds = $manuais->pluck('id');
+        $cadernos    = Livro::where('ano_escolar_id', $anoEscolarId)
+            ->where('editora_id', $editoraId)
+            ->where('tipo', 'CADERNO_ATIVIDADES')
+            ->whereIn('livro_relacionado_id', $cadernosIds)
+            ->get()
+            ->keyBy('livro_relacionado_id');
 
-            if ($manuais->isEmpty() && $cadernos->isEmpty()) {
-                continue;
-            }
-
-            $manual  = $manuais->isNotEmpty()
-                ? $manuais->get($lista->escola_id % $manuais->count())
-                : null;
-
-            $caderno = $cadernos->isNotEmpty()
-                ? $cadernos->get($lista->escola_id % $cadernos->count())
-                : null;
+        foreach ($manuais as $manual) {
+            $caderno = $cadernos[$manual->id] ?? null;
 
             ListaLivroItem::create([
                 'lista_id'         => $lista->id,
-                'disciplina_id'    => $disciplinaId,
-                'manual_livro_id'  => $manual?->id,
+                'disciplina_id'    => $manual->disciplina_id,
+                'manual_livro_id'  => $manual->id,
                 'caderno_livro_id' => $caderno?->id,
             ]);
         }

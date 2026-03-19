@@ -9,7 +9,7 @@ const normalizeTipo = (t) => {
   return "manual";
 };
  
-export default function NewBookModal({ open, onClose, filters }) {
+export default function NewBookModal({ open, onClose, filters, onCreated }) {
   // Estado para controlar se estamos a criar um combo
   const [isCombo, setIsCombo] = React.useState(false);
  
@@ -22,27 +22,34 @@ export default function NewBookModal({ open, onClose, filters }) {
     preco: "",
     editora_id: "",
     isbn: "",
+    codigo_interno: "",
     ativo: true,
-   
+
     // Dados do Caderno (Enviados apenas se isCombo for true)
     vincular_ca: false,
     ca_titulo: "",
     ca_isbn: "",
     ca_preco: "",
+    ca_codigo_interno: "",
   });
  
   const [isbnMatch, setIsbnMatch] = React.useState(null);
   const [isbnLoading, setIsbnLoading] = React.useState(false);
   const isbnTimerRef = React.useRef(null);
- 
+
+  const [caIsbnMatch, setCaIsbnMatch] = React.useState(null);
+  const [caIsbnLoading, setCaIsbnLoading] = React.useState(false);
+  const caIsbnTimerRef = React.useRef(null);
+
   // Reset ao fechar/abrir
   React.useEffect(() => {
     if (!open) return;
     form.reset();
     setIsCombo(false);
     setIsbnMatch(null);
+    setCaIsbnMatch(null);
   }, [open]);
- 
+
   // Sincroniza o estado do combo com o form data
   React.useEffect(() => {
     form.setData((prev) => ({
@@ -52,52 +59,110 @@ export default function NewBookModal({ open, onClose, filters }) {
       tipo: isCombo ? "manual" : prev.tipo,
     }));
   }, [isCombo]);
- 
+
+  const checkIsbn = async (value) => {
+    if (!value || !value.trim()) return;
+    setIsbnLoading(true);
+    try {
+      const res  = await fetch(route("catalogo.livros.checkIsbn") + "?isbn=" + encodeURIComponent(value.trim()));
+      const json = await res.json();
+      if (json.livro) {
+        setIsbnMatch(json.livro);
+        // Só preenche os campos se o livro estiver eliminado (vai ser restaurado)
+        if (json.livro.deleted) {
+          form.setData((prev) => ({
+            ...prev,
+            titulo:         json.livro.titulo        ?? prev.titulo,
+            disciplina_id:  json.livro.disciplina_id ?? prev.disciplina_id,
+            ano_escolar_id: json.livro.ano_escolar_id ?? prev.ano_escolar_id,
+            editora_id:     json.livro.editora_id    ?? prev.editora_id,
+            tipo:           normalizeTipo(json.livro.tipo),
+            preco:          json.livro.preco !== undefined ? String(json.livro.preco) : prev.preco,
+            ca_titulo:      prev.ca_titulo || `Caderno de Atividades: ${json.livro.titulo ?? ""}`,
+          }));
+        }
+      } else {
+        setIsbnMatch(null);
+      }
+    } catch {
+      setIsbnMatch(null);
+    } finally {
+      setIsbnLoading(false);
+    }
+  };
+
   const handleIsbnChange = (value) => {
     form.setData("isbn", value);
     setIsbnMatch(null);
     clearTimeout(isbnTimerRef.current);
- 
-    if (value.trim().length < 5) {
+    if (!value.trim()) {
       setIsbnLoading(false);
       return;
     }
- 
     setIsbnLoading(true);
-    isbnTimerRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          route("catalogo.livros.checkIsbn") + "?isbn=" + encodeURIComponent(value.trim())
-        );
-        const json = await res.json();
- 
-        if (json.livro) {
-          setIsbnMatch(json.livro);
+    isbnTimerRef.current = setTimeout(() => checkIsbn(value), 500);
+  };
+
+  const handleIsbnBlur = (value) => {
+    clearTimeout(isbnTimerRef.current);
+    checkIsbn(value);
+  };
+
+  const checkCaIsbn = async (value) => {
+    if (!value || !value.trim()) return;
+    if (form.data.isbn.trim() && value.trim() === form.data.isbn.trim()) return;
+    setCaIsbnLoading(true);
+    try {
+      const res  = await fetch(route("catalogo.livros.checkIsbn") + "?isbn=" + encodeURIComponent(value.trim()));
+      const json = await res.json();
+      if (json.livro) {
+        setCaIsbnMatch(json.livro);
+        // Só pré-preenche se for um CA eliminado (não um manual)
+        if (json.livro.deleted && normalizeTipo(json.livro.tipo) === "caderno_atividades") {
           form.setData((prev) => ({
             ...prev,
-            titulo: json.livro.titulo ?? prev.titulo,
-            disciplina_id: json.livro.disciplina_id ?? prev.disciplina_id,
-            ano_escolar_id: json.livro.ano_escolar_id ?? prev.ano_escolar_id,
-            editora_id: json.livro.editora_id ?? prev.editora_id,
-            tipo: normalizeTipo(json.livro.tipo),
-            preco: json.livro.preco !== undefined ? String(json.livro.preco) : prev.preco,
-            // Sugestão automática para o título do CA baseada no manual encontrado
-            ca_titulo: prev.ca_titulo || `Caderno de Atividades: ${json.livro.titulo ?? ""}`,
+            ca_titulo: json.livro.titulo ?? prev.ca_titulo,
+            ca_preco:  json.livro.preco !== undefined ? String(json.livro.preco) : prev.ca_preco,
           }));
         }
-      } catch {
-        setIsbnMatch(null);
-      } finally {
-        setIsbnLoading(false);
+      } else {
+        setCaIsbnMatch(null);
       }
-    }, 500);
+    } catch {
+      setCaIsbnMatch(null);
+    } finally {
+      setCaIsbnLoading(false);
+    }
+  };
+
+  const handleCaIsbnChange = (value) => {
+    form.setData("ca_isbn", value);
+    setCaIsbnMatch(null);
+    clearTimeout(caIsbnTimerRef.current);
+    if (!value.trim() || (form.data.isbn.trim() && value.trim() === form.data.isbn.trim())) {
+      setCaIsbnLoading(false);
+      return;
+    }
+    setCaIsbnLoading(true);
+    caIsbnTimerRef.current = setTimeout(() => checkCaIsbn(value), 500);
+  };
+
+  const handleCaIsbnBlur = (value) => {
+    clearTimeout(caIsbnTimerRef.current);
+    checkCaIsbn(value);
   };
  
   const submit = (e) => {
     e.preventDefault();
     form.post(route("catalogo.livros.store"), {
       preserveScroll: true,
-      onSuccess: () => onClose(),
+      onSuccess: () => {
+        form.reset();
+        setIsCombo(false);
+        setIsbnMatch(null);
+        onCreated?.();
+        onClose();
+      },
     });
   };
 
@@ -148,12 +213,37 @@ export default function NewBookModal({ open, onClose, filters }) {
                   required
                   value={form.data.isbn}
                   onChange={(e) => handleIsbnChange(e.target.value)}
+                  onBlur={(e) => handleIsbnBlur(e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-black outline-none"
                   placeholder={isCombo ? "ISBN do Manual" : "ISBN"}
                 />
                 {isbnLoading && <span className="absolute right-3 top-3 text-gray-400 animate-spin text-xs">⟳</span>}
               </div>
               {form.errors.isbn && <p className="text-xs text-red-600 mt-1">{form.errors.isbn}</p>}
+              {isCombo && form.data.isbn.trim() && form.data.ca_isbn.trim() && form.data.isbn.trim() === form.data.ca_isbn.trim() && (
+                <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+                  <p className="text-xs text-red-700 font-semibold leading-snug">
+                    O ISBN do Manual não pode ser igual ao ISBN do Caderno de Atividades.
+                  </p>
+                </div>
+              )}
+              {isbnMatch && !isbnMatch.deleted && (
+                <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+                  <p className="text-xs text-red-700 font-semibold leading-snug">
+                    Este ISBN já está associado ao livro <strong>"{isbnMatch.titulo}"</strong>. Não é possível criar um livro com este ISBN.
+                  </p>
+                </div>
+              )}
+              {isbnMatch && isbnMatch.deleted && (
+                <div className="flex items-start gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <span className="text-amber-500 font-black text-sm mt-0.5">↺</span>
+                  <p className="text-xs text-amber-700 font-semibold leading-snug">
+                    O livro <strong>"{isbnMatch.titulo}"</strong> foi anteriormente eliminado e será restaurado com os novos dados.
+                  </p>
+                </div>
+              )}
             </div>
  
             {/* Título */}
@@ -166,6 +256,22 @@ export default function NewBookModal({ open, onClose, filters }) {
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 placeholder="Ex: Português 5 - Manual"
               />
+              {form.errors.titulo && <p className="text-xs text-red-600 mt-1">{form.errors.titulo}</p>}
+            </div>
+
+            {/* Código Interno da Editora */}
+            <div>
+              <label className="block text-xs font-black text-gray-700 mb-1 ml-1">
+                {isCombo ? 'CÓD. INTERNO EDITORA (MANUAL)' : 'CÓD. INTERNO EDITORA'}
+                <span className="ml-1 text-gray-400 font-medium">(opcional)</span>
+              </label>
+              <input
+                value={form.data.codigo_interno}
+                onChange={(e) => form.setData("codigo_interno", e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
+                placeholder="Ex: ED-2025-001"
+              />
+              {form.errors.codigo_interno && <p className="text-xs text-red-600 mt-1">{form.errors.codigo_interno}</p>}
             </div>
  
             {/* Tipo - só aparece quando NÃO está em modo combo */}
@@ -201,6 +307,7 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("preco", e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 />
+                {form.errors.preco && <p className="text-xs text-red-600 mt-1">{form.errors.preco}</p>}
               </div>
               <div>
                 <label className="block text-xs font-black text-gray-700 mb-1 ml-1">EDITORA *</label>
@@ -210,9 +317,10 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("editora_id", e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 >
-                  <option value="">Selecionar...</option>
+                  <option value="">Selecione a editora...</option>
                   {(filters?.editoras || []).map(ed => <option key={ed.id} value={ed.id}>{ed.nome}</option>)}
                 </select>
+                {form.errors.editora_id && <p className="text-xs text-red-600 mt-1">{form.errors.editora_id}</p>}
               </div>
             </div>
  
@@ -225,9 +333,10 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("disciplina_id", e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 >
-                  <option value="">...</option>
+                  <option value="">Selecione a disciplina...</option>
                   {(filters?.disciplinas || []).map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
                 </select>
+                {form.errors.disciplina_id && <p className="text-xs text-red-600 mt-1">{form.errors.disciplina_id}</p>}
               </div>
               <div>
                 <label className="block text-xs font-black text-gray-700 mb-1 ml-1">ANO *</label>
@@ -237,9 +346,10 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("ano_escolar_id", e.target.value)}
                   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 >
-                  <option value="">...</option>
+                  <option value="">Selecione o ano...</option>
                   {(filters?.anos || []).map(a => <option key={a.id} value={a.id}>{a.label ?? a.nome}</option>)}
                 </select>
+                {form.errors.ano_escolar_id && <p className="text-xs text-red-600 mt-1">{form.errors.ano_escolar_id}</p>}
               </div>
             </div>
           </div>
@@ -253,14 +363,50 @@ export default function NewBookModal({ open, onClose, filters }) {
  
               <div>
                 <label className="block text-xs font-black text-blue-900 mb-1 ml-1">ISBN DO CADERNO *</label>
-                <input
-                  required={isCombo}
-                  value={form.data.ca_isbn}
-                  onChange={(e) => form.setData("ca_isbn", e.target.value)}
-                  className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="ISBN do Caderno"
-                />
+                <div className="relative">
+                  <input
+                    required={isCombo}
+                    value={form.data.ca_isbn}
+                    onChange={(e) => handleCaIsbnChange(e.target.value)}
+                    onBlur={(e) => handleCaIsbnBlur(e.target.value)}
+                    className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="ISBN do Caderno"
+                  />
+                  {caIsbnLoading && <span className="absolute right-3 top-3 text-gray-400 animate-spin text-xs">⟳</span>}
+                </div>
                 {form.errors.ca_isbn && <p className="text-xs text-red-600 mt-1">{form.errors.ca_isbn}</p>}
+                {form.data.ca_isbn.trim() && form.data.isbn.trim() && form.data.ca_isbn.trim() === form.data.isbn.trim() && (
+                  <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+                    <p className="text-xs text-red-700 font-semibold leading-snug">
+                      O ISBN do Caderno não pode ser igual ao ISBN do Manual.
+                    </p>
+                  </div>
+                )}
+                {caIsbnMatch && normalizeTipo(caIsbnMatch.tipo) === "manual" && (
+                  <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+                    <p className="text-xs text-red-700 font-semibold leading-snug">
+                      Este ISBN pertence a um <strong>Manual</strong> ("{caIsbnMatch.titulo}"). Não é possível vinculá-lo como Caderno de Atividades.
+                    </p>
+                  </div>
+                )}
+                {caIsbnMatch && normalizeTipo(caIsbnMatch.tipo) === "caderno_atividades" && !caIsbnMatch.deleted && (
+                  <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <span className="text-red-500 font-black text-sm mt-0.5">!</span>
+                    <p className="text-xs text-red-700 font-semibold leading-snug">
+                      Este ISBN já está associado ao caderno <strong>"{caIsbnMatch.titulo}"</strong>. Não é possível criar um caderno com este ISBN.
+                    </p>
+                  </div>
+                )}
+                {caIsbnMatch && normalizeTipo(caIsbnMatch.tipo) === "caderno_atividades" && caIsbnMatch.deleted && (
+                  <div className="flex items-start gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <span className="text-amber-500 font-black text-sm mt-0.5">↺</span>
+                    <p className="text-xs text-amber-700 font-semibold leading-snug">
+                      O caderno <strong>"{caIsbnMatch.titulo}"</strong> foi anteriormente eliminado e será restaurado com os novos dados.
+                    </p>
+                  </div>
+                )}
               </div>
  
               <div>
@@ -271,8 +417,9 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("ca_titulo", e.target.value)}
                   className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                 />
+                {form.errors.ca_titulo && <p className="text-xs text-red-600 mt-1">{form.errors.ca_titulo}</p>}
               </div>
- 
+
               <div>
                 <label className="block text-xs font-black text-blue-900 mb-1 ml-1">PREÇO DO CADERNO (€) *</label>
                 <input
@@ -282,8 +429,23 @@ export default function NewBookModal({ open, onClose, filters }) {
                   onChange={(e) => form.setData("ca_preco", e.target.value)}
                   className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                 />
+                {form.errors.ca_preco && <p className="text-xs text-red-600 mt-1">{form.errors.ca_preco}</p>}
               </div>
-             
+
+              <div>
+                <label className="block text-xs font-black text-blue-900 mb-1 ml-1">
+                  CÓD. INTERNO EDITORA (CADERNO)
+                  <span className="ml-1 text-blue-400 font-medium">(opcional)</span>
+                </label>
+                <input
+                  value={form.data.ca_codigo_interno}
+                  onChange={(e) => form.setData("ca_codigo_interno", e.target.value)}
+                  className="w-full bg-white border border-blue-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Ex: ED-2025-002"
+                />
+                {form.errors.ca_codigo_interno && <p className="text-xs text-red-600 mt-1">{form.errors.ca_codigo_interno}</p>}
+              </div>
+
               <div className="p-3 bg-white/60 rounded-xl border border-blue-100 mt-4">
                 <p className="text-[10px] text-blue-600 font-bold leading-tight">
                   Nota: A disciplina, o ano e a editora serão herdados automaticamente do manual.
@@ -300,7 +462,7 @@ export default function NewBookModal({ open, onClose, filters }) {
           </button>
           <button
             type="submit"
-            disabled={form.processing}
+            disabled={form.processing || (isCombo && form.data.isbn.trim() && form.data.ca_isbn.trim() && form.data.isbn.trim() === form.data.ca_isbn.trim())}
             className="px-8 py-2.5 bg-black text-white text-sm font-black rounded-xl hover:bg-gray-800 transition disabled:opacity-50 flex items-center gap-2"
           >
             {form.processing ? "A Guardar..." : (
